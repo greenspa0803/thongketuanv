@@ -105,6 +105,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 .edit-lbl{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:5px;margin-top:12px}
 .edit-lbl:first-of-type{margin-top:0}
 .edit-actions{display:-webkit-flex;display:flex;gap:10px;margin-top:20px}
+.edit-ac{position:relative;width:100%}
+.edit-ac .dropdown{z-index:1100;position:absolute;top:calc(100% + 2px);left:0;right:0}
 .modal{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 36px}
 .modal h3{font-size:18px;font-weight:700;margin-bottom:8px}
 .modal p{color:var(--muted);font-size:14px;margin-bottom:20px}
@@ -133,23 +135,31 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
   <div class="edit-modal">
-    <h3>Sửa dịch vụ <span id="editSttLabel" style="color:var(--accent);font-size:13px"></span></h3>
+    <h3>Sua dich vu <span id="editSttLabel" style="color:var(--accent);font-size:13px"></span></h3>
     <input type="hidden" id="editRowIndex">
-    <div class="edit-lbl">Tên khách hàng</div>
-    <input type="text" class="form-control" id="editCustomer" placeholder="Tên khách hàng">
-    <div class="edit-lbl">Số điện thoại</div>
-    <input type="tel" class="form-control" id="editPhone" placeholder="Số điện thoại">
-    <div class="edit-lbl">Dịch vụ</div>
-    <input type="text" class="form-control" id="editService" placeholder="Dịch vụ">
-    <div class="edit-lbl">Tiền tua (K)</div>
+    <div class="edit-lbl">So dien thoai</div>
+    <div class="edit-ac">
+      <input type="tel" class="form-control" id="editPhone" placeholder="So dien thoai..."
+        autocomplete="off" oninput="onEditPhoneInput(this.value)" onfocus="onEditPhoneInput(this.value)">
+      <div class="dropdown" id="editPhoneDrop"></div>
+    </div>
+    <div class="edit-lbl">Ten khach hang</div>
+    <input type="text" class="form-control" id="editCustomer" placeholder="Ten khach hang" autocomplete="off">
+    <div class="edit-lbl">Dich vu</div>
+    <div class="edit-ac">
+      <input type="text" class="form-control" id="editService" placeholder="Tim dich vu..."
+        autocomplete="off" oninput="onEditSvcInput(this.value)" onfocus="onEditSvcInput(this.value)">
+      <div class="dropdown" id="editSvcDrop"></div>
+    </div>
+    <div class="edit-lbl">Tien tua (K)</div>
     <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control" id="editAmount" placeholder="0">
-    <div class="edit-lbl">Tăng ca (K)</div>
+    <div class="edit-lbl">Tang ca (K)</div>
     <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control" id="editOvertime" placeholder="0">
-    <div class="edit-lbl">Ghi chú</div>
-    <input type="text" class="form-control" id="editNote" placeholder="Ghi chú">
+    <div class="edit-lbl">Ghi chu</div>
+    <input type="text" class="form-control" id="editNote" placeholder="Ghi chu">
     <div class="edit-actions">
-      <button class="btn btn-secondary" onclick="closeEdit()">Huỷ</button>
-      <button class="btn btn-primary" id="editSaveBtn" onclick="doUpdate()">&#10003; Cập nhật</button>
+      <button class="btn btn-secondary" onclick="closeEdit()">Huy</button>
+      <button class="btn btn-primary" id="editSaveBtn" onclick="doUpdate()">&#10003; Cap nhat</button>
     </div>
   </div>
 </div>
@@ -639,6 +649,74 @@ function renderRecords(data, total, totalTua, totalOvertime) {
   list.innerHTML = html;
 }
 
+// ── EDIT AUTOCOMPLETE ──────────────────────────────────────
+function onEditPhoneInput(val) {
+  var drop = document.getElementById('editPhoneDrop');
+  // đóng dropdown dịch vụ
+  document.getElementById('editSvcDrop').classList.remove('open');
+  if (!val || val.length < 1) { drop.classList.remove('open'); return; }
+  var q = val.toLowerCase();
+  var matches = [];
+  for (var i = 0; i < customers.length; i++) {
+    var c = customers[i];
+    if (c.phone.indexOf(val) !== -1 || (c.name && c.name.toLowerCase().indexOf(q) !== -1)) {
+      matches.push(c);
+      if (matches.length >= 8) break;
+    }
+  }
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop._data = matches;
+  var html = '';
+  for (var j = 0; j < matches.length; j++) {
+    html += '<div class="dropdown-item" onclick="selectEditPhone(' + j + ')">';
+    html += '<strong>' + esc(matches[j].phone) + '</strong>';
+    html += '<small>' + esc(matches[j].name || 'Chua co ten') + '</small>';
+    html += '</div>';
+  }
+  drop.innerHTML = html;
+  drop.classList.add('open');
+}
+
+function selectEditPhone(i) {
+  var drop = document.getElementById('editPhoneDrop');
+  var c = drop._data[i];
+  document.getElementById('editPhone').value    = c.phone;
+  document.getElementById('editCustomer').value = c.name;
+  drop.classList.remove('open');
+}
+
+function onEditSvcInput(val) {
+  var drop = document.getElementById('editSvcDrop');
+  // đóng dropdown phone
+  document.getElementById('editPhoneDrop').classList.remove('open');
+  if (!val) { drop.classList.remove('open'); return; }
+  var q = val.toLowerCase();
+  var matches = [];
+  for (var i = 0; i < services.length; i++) {
+    if (services[i].name.toLowerCase().indexOf(q) !== -1) {
+      matches.push(services[i]);
+      if (matches.length >= 8) break;
+    }
+  }
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop._data = matches;
+  var html = '';
+  for (var j = 0; j < matches.length; j++) {
+    var priceStr = matches[j].price ? '<small>&#128176; ' + fmtK(matches[j].price) + '</small>' : '';
+    html += '<div class="dropdown-item" onclick="selectEditSvc(' + j + ')">' + esc(matches[j].name) + priceStr + '</div>';
+  }
+  drop.innerHTML = html;
+  drop.classList.add('open');
+}
+
+function selectEditSvc(i) {
+  var drop = document.getElementById('editSvcDrop');
+  var s = drop._data[i];
+  document.getElementById('editService').value = s.name;
+  if (s.price) document.getElementById('editAmount').value = s.price;
+  drop.classList.remove('open');
+}
+
 // ── EDIT RECORD ────────────────────────────────────────────
 var currentRecords = [];
 var currentViewDate = '';
@@ -732,6 +810,10 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.autocomplete-wrap') && !e.target.closest('.svc-ac'))
     closeAllDropdowns();
   if (e.target === document.getElementById('editModal')) closeEdit();
+  if (!e.target.closest('.edit-ac')) {
+    document.getElementById('editPhoneDrop').classList.remove('open');
+    document.getElementById('editSvcDrop').classList.remove('open');
+  }
 });
 
 // ── LOADING / TOAST ─────────────────────────────────────────
