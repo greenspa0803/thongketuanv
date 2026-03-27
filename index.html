@@ -834,7 +834,7 @@ function renderMonthView(result) {
     var d = days[i];
     var did = 'daycard_' + i;
     html += '<div class="day-card">' +
-      '<div class="day-card-header" onclick="toggleDayCard('' + did + '')">' +
+      '<div class="day-card-header" data-did="' + did + '" onclick="handleDayCard(this)">' +
         '<div>' +
           '<div class="day-card-date">' + esc(d.date) + '</div>' +
           '<div class="day-card-count">' + d.records.length + ' dich vu' + (d.totalOt > 0 ? ' | Tang ca: ' + fmtK(d.totalOt) : '') + '</div>' +
@@ -870,6 +870,10 @@ function toggleDayCard(id) {
   var isOpen = body.className.indexOf('open') !== -1;
   body.className = 'day-card-body' + (isOpen ? '' : ' open');
   chv.className  = 'day-card-chevron' + (isOpen ? '' : ' open');
+}
+function handleDayCard(el) {
+  var id = el.getAttribute('data-did');
+  toggleDayCard(id);
 }
 
 function initMonthYearSelects(monthId, yearId) {
@@ -967,7 +971,7 @@ function renderAdminMonth(staff, month, year, result) {
     var d = days[i];
     var did = 'adm_' + i;
     html += '<div class="day-card">' +
-      '<div class="day-card-header" onclick="toggleDayCard('' + did + '')">' +
+      '<div class="day-card-header" data-did="' + did + '" onclick="handleDayCard(this)">' +
         '<div>' +
           '<div class="day-card-date">' + esc(d.date) + '</div>' +
           '<div class="day-card-count">' + d.records.length + ' dich vu' + (d.totalOt > 0 ? ' | Tang ca: ' + fmtK(d.totalOt) : '') + '</div>' +
