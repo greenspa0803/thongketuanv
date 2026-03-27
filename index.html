@@ -217,7 +217,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       <label class="form-label">Mật khẩu</label>
       <input type="password" class="form-control" id="passwordInput" placeholder="Nhập mật khẩu" autocomplete="current-password">
     </div>
-    <button class="btn btn-primary" onclick="doLogin()">Đăng nhập</button>
+    <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
   </div>
 </div>
 
@@ -469,14 +469,12 @@ function doLogin() {
 
   // Nhan vien: verify qua Sheet1 cot B
   var loginBtn = document.getElementById('loginBtn');
-  loginBtn.disabled = true;
-  loginBtn.textContent = 'Dang kiem tra...';
+  if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Dang kiem tra...'; }
   showLoading(true, 'Dang xac thuc...');
 
   api({ action: 'verifyLogin', staff: staff, pass: pass }, function(err, result) {
     showLoading(false);
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'Dang nhap';
+    if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Dang nhap'; }
     if (err) return showLoginError('Loi ket noi, thu lai');
     if (!result || !result.success) {
       return showLoginError(result ? result.error : 'Loi xac thuc');
