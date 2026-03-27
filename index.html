@@ -396,12 +396,15 @@ window.addEventListener('DOMContentLoaded', function() {
   var saved = localStorage.getItem('loggedUser');
   var savedPass = localStorage.getItem('loggedPass');
   if (saved === '__admin__' && savedPass === ADMIN_PASSWORD) {
-    initAdminScreen(function() { showScreen('adminScreen'); });
+    showScreen('adminScreen');
+    initAdminScreen(null);
   } else if (saved && saved !== '__admin__') {
     currentUser = saved;
-    initMainScreen(function() { showScreen('mainScreen'); });
+    showScreen('mainScreen');
+    initMainScreen(null);
   } else {
-    loadStaffList(function() { showScreen('loginScreen'); });
+    showScreen('loginScreen');
+    loadStaffList(null);
   }
 });
 
@@ -414,24 +417,24 @@ function showScreen(id) {
 
 // ── STAFF LIST ──────────────────────────────────────────────
 function loadStaffList(done) {
-  showLoading(true, 'Đang tải danh sách nhân viên...');
+  // Luon show login truoc, roi moi load data
+  if (done) done();
+  showLoading(true, 'Dang tai danh sach...');
   api({ action: 'getStaff' }, function(err, result) {
     showLoading(false);
     var sel = document.getElementById('staffSelect');
     if (err || !result || !result.success) {
-      sel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
-      showLoginError('Không kết nối được. Kiểm tra lại API_URL.');
-      if (done) done();
+      sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
+      showLoginError('Khong ket noi duoc API. Kiem tra lai URL.');
       return;
     }
-    sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
+    sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
     for (var i = 0; i < result.data.length; i++) {
       var opt = document.createElement('option');
       opt.value = result.data[i];
       opt.textContent = result.data[i];
       sel.appendChild(opt);
     }
-    if (done) done();
   });
 }
 
@@ -445,14 +448,16 @@ function doLogin() {
   if (pass === ADMIN_PASSWORD) {
     localStorage.setItem('loggedUser', '__admin__');
     localStorage.setItem('loggedPass', pass);
-    initAdminScreen(function() { showScreen('adminScreen'); });
+    showScreen('adminScreen');
+    initAdminScreen(null);
     return;
   }
   if (pass !== PASSWORD) return showLoginError('Mat khau khong dung');
   currentUser = staff;
   localStorage.setItem('loggedUser', staff);
   localStorage.setItem('loggedPass', pass);
-  initMainScreen(function() { showScreen('mainScreen'); });
+  showScreen('mainScreen');
+  initMainScreen(null);
 }
 
 function showLoginError(msg) {
@@ -470,11 +475,13 @@ function initMainScreen(done) {
   document.getElementById('avatarText').textContent = currentUser.charAt(0).toUpperCase();
   setDateToday();
   if (!document.querySelector('.svc-row')) addSvcRow();
-  showLoading(true, 'Đang tải dữ liệu...');
+  if (done) done();
+  // Load data ngam sau khi da hien man hinh
+  showLoading(true, 'Dang tai du lieu...');
   var loaded = 0;
   function checkDone() {
     loaded++;
-    if (loaded === 2) { showLoading(false); if (done) done(); }
+    if (loaded === 2) showLoading(false);
   }
   api({ action: 'getCustomers' }, function(err, res) {
     if (!err && res && res.success) customers = res.data;
@@ -894,7 +901,8 @@ function fmtDate(d) {
 // ── ADMIN SCREEN ────────────────────────────────────────────
 function initAdminScreen(done) {
   initMonthYearSelects('adminMonth', 'adminYear');
-  // Điền danh sách nhân viên vào admin dropdown
+  if (done) done();
+  // Load staff list ngam
   api({ action: 'getStaff' }, function(err, result) {
     var sel = document.getElementById('adminStaffSelect');
     sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
@@ -906,7 +914,6 @@ function initAdminScreen(done) {
         sel.appendChild(opt);
       }
     }
-    if (done) done();
   });
 }
 
