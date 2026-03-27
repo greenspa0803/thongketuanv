@@ -359,8 +359,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
 const API_URL  = 'https://script.google.com/macros/s/AKfycby0O7CA6TxMFqWe7LHGw6d78Y-spVkgGiI-oC28AcZqcHSSbNpvGrjvJ2kymdlWtgAh/exec';
-var PASSWORD       = '1234';
 var ADMIN_PASSWORD = 'admin123'; // doi mat khau admin tai day
+// Mat khau nhan vien lay tu cot B Sheet1 - khong can khai bao o day
 
 // ── STATE ───────────────────────────────────────────────────
 var currentUser = null;
@@ -393,15 +393,27 @@ function api(params, cb) {
 
 // ── INIT ────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
-  var saved = localStorage.getItem('loggedUser');
+  var saved     = localStorage.getItem('loggedUser');
   var savedPass = localStorage.getItem('loggedPass');
   if (saved === '__admin__' && savedPass === ADMIN_PASSWORD) {
     showScreen('adminScreen');
     initAdminScreen(null);
-  } else if (saved && saved !== '__admin__') {
-    currentUser = saved;
-    showScreen('mainScreen');
-    initMainScreen(null);
+  } else if (saved && saved !== '__admin__' && savedPass) {
+    // Verify lai voi server phong truong hop bi khoa sau khi da login
+    showScreen('mainScreen'); // hien truoc tranh man hinh trang
+    api({ action: 'verifyLogin', staff: saved, pass: savedPass }, function(err, result) {
+      if (err || !result || !result.success) {
+        // Bi khoa hoac sai pass -> dang xuat
+        localStorage.removeItem('loggedUser');
+        localStorage.removeItem('loggedPass');
+        showScreen('loginScreen');
+        loadStaffList(null);
+        if (result && result.error) showLoginError(result.error);
+        return;
+      }
+      currentUser = saved;
+      initMainScreen(null);
+    });
   } else {
     showScreen('loginScreen');
     loadStaffList(null);
@@ -443,8 +455,10 @@ function doLogin() {
   var staff = document.getElementById('staffSelect').value;
   var pass  = document.getElementById('passwordInput').value;
   hideLoginError();
-  if (!staff) return showLoginError('Vui lòng chon nhan vien');
-  // Admin login
+  if (!staff) return showLoginError('Vui long chon nhan vien');
+  if (!pass)  return showLoginError('Vui long nhap mat khau');
+
+  // Admin: kiem tra truoc, khong can goi API
   if (pass === ADMIN_PASSWORD) {
     localStorage.setItem('loggedUser', '__admin__');
     localStorage.setItem('loggedPass', pass);
@@ -452,12 +466,28 @@ function doLogin() {
     initAdminScreen(null);
     return;
   }
-  if (pass !== PASSWORD) return showLoginError('Mat khau khong dung');
-  currentUser = staff;
-  localStorage.setItem('loggedUser', staff);
-  localStorage.setItem('loggedPass', pass);
-  showScreen('mainScreen');
-  initMainScreen(null);
+
+  // Nhan vien: verify qua Sheet1 cot B
+  var loginBtn = document.getElementById('loginBtn');
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Dang kiem tra...';
+  showLoading(true, 'Dang xac thuc...');
+
+  api({ action: 'verifyLogin', staff: staff, pass: pass }, function(err, result) {
+    showLoading(false);
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Dang nhap';
+    if (err) return showLoginError('Loi ket noi, thu lai');
+    if (!result || !result.success) {
+      return showLoginError(result ? result.error : 'Loi xac thuc');
+    }
+    // Login thanh cong
+    currentUser = staff;
+    localStorage.setItem('loggedUser', staff);
+    localStorage.setItem('loggedPass', pass);
+    showScreen('mainScreen');
+    initMainScreen(null);
+  });
 }
 
 function showLoginError(msg) {
