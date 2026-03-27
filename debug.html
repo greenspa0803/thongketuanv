@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug</title>
+</head>
+<body style="background:#111;color:#fff;padding:20px;font-family:sans-serif">
+<h2 id="s1" style="color:red">Step 1: HTML loaded</h2>
+<h2 id="s2" style="color:red">Step 2: CSS ok</h2>
+<h2 id="s3" style="color:red">Step 3: JS basic ok</h2>
+<h2 id="s4" style="color:red">Step 4: localStorage ok</h2>
+<h2 id="s5" style="color:red">Step 5: fetch ok</h2>
+<div id="log" style="margin-top:20px;font-size:13px;color:#aaa"></div>
+<script>
+function log(msg) {
+  document.getElementById('log').innerHTML += '<div>' + msg + '</div>';
+}
+
+// Step 1 luon hien vi HTML da load
+document.getElementById('s1').style.color = 'lime';
+
+// Step 2
+try {
+  document.body.style.background = '#111';
+  document.getElementById('s2').style.color = 'lime';
+} catch(e) { log('CSS error: ' + e); }
+
+// Step 3
+try {
+  var x = 1 + 1;
+  document.getElementById('s3').style.color = 'lime';
+} catch(e) { log('JS error: ' + e); }
+
+// Step 4
+try {
+  localStorage.setItem('test', '1');
+  var v = localStorage.getItem('test');
+  if (v === '1') {
+    document.getElementById('s4').style.color = 'lime';
+  } else {
+    log('localStorage: set ok but get failed');
+  }
+} catch(e) { log('localStorage error: ' + e.message); }
+
+// Step 5
+try {
+  fetch('https://httpbin.org/get')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      document.getElementById('s5').style.color = 'lime';
+      log('fetch ok: ' + d.url);
+    })
+    .catch(function(e) { log('fetch failed: ' + e.message); });
+} catch(e) { log('fetch error: ' + e.message); }
+</script>
+</body>
+</html>
