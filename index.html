@@ -105,10 +105,46 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 .edit-lbl{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:5px;margin-top:12px}
 .edit-lbl:first-of-type{margin-top:0}
 .edit-actions{display:-webkit-flex;display:flex;gap:10px;margin-top:20px}
+.edit-ac{position:relative;width:100%}
+.edit-ac .dropdown{z-index:1100;position:absolute;top:calc(100% + 2px);left:0;right:0}
 .modal{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 36px}
 .modal h3{font-size:18px;font-weight:700;margin-bottom:8px}
 .modal p{color:var(--muted);font-size:14px;margin-bottom:20px}
 .modal-actions{display:-webkit-flex;display:flex;gap:10px}
+/* Admin */
+#adminScreen{background:var(--bg)}
+.admin-content{-webkit-flex:1;flex:1;overflow-y:auto;padding:20px;padding-bottom:110px}
+.admin-badge{display:inline-block;background:#fbbf2422;border:1px solid var(--warn);color:var(--warn);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;margin-left:8px}
+/* View mode toggle */
+.mode-toggle{display:-webkit-flex;display:flex;background:var(--surface2);border-radius:var(--rs);padding:3px;margin-bottom:16px;gap:3px}
+.mode-btn{-webkit-flex:1;flex:1;padding:8px;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted)}
+.mode-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px #0004}
+/* Month/year selects */
+.period-row{display:-webkit-flex;display:flex;gap:8px;margin-bottom:16px}
+.period-row select{-webkit-flex:1;flex:1}
+/* Day card in month view */
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.day-card-header{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;padding:12px 16px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.day-card-date{font-size:14px;font-weight:700}
+.day-card-total{font-size:14px;font-weight:700;color:var(--success)}
+.day-card-count{font-size:11px;color:var(--muted);margin-top:1px}
+.day-card-chevron{color:var(--muted);font-size:16px;-webkit-transition:-webkit-transform .2s;transition:transform .2s}
+.day-card-chevron.open{-webkit-transform:rotate(90deg);transform:rotate(90deg)}
+.day-card-body{display:none;border-top:1px solid var(--border);padding:12px 16px}
+.day-card-body.open{display:block}
+.day-record{padding:8px 0;border-bottom:1px solid var(--border);display:-webkit-flex;display:flex;gap:10px;-webkit-align-items:flex-start;align-items:flex-start}
+.day-record:last-child{border-bottom:none;padding-bottom:0}
+.day-record-stt{width:24px;height:24px;background:-webkit-linear-gradient(135deg,var(--accent),var(--accent2));background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:6px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;-webkit-flex-shrink:0;flex-shrink:0}
+.day-record-body{-webkit-flex:1;flex:1;min-width:0}
+.day-record-name{font-size:13px;font-weight:600}
+.day-record-svc{font-size:12px;color:var(--accent2);margin-top:2px}
+.day-record-ot{font-size:11px;color:var(--warn)}
+.day-record-amt{font-size:13px;font-weight:700;color:var(--success);white-space:nowrap}
+/* Admin month summary */
+.month-summary{background:-webkit-linear-gradient(135deg,#1a2855,#2a1a50);background:linear-gradient(135deg,#1a2855,#2a1a50);border:1px solid #3a4a8a;border-radius:var(--r);padding:20px;margin-bottom:16px;text-align:center}
+.ms-amount{font-size:30px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.ms-breakdown{display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;gap:16px;margin-top:8px;font-size:12px;color:#8899cc}
+.ms-count{font-size:12px;color:#8899cc;margin-top:6px}
 </style>
 </head>
 <body>
@@ -133,23 +169,31 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
   <div class="edit-modal">
-    <h3>Sửa dịch vụ <span id="editSttLabel" style="color:var(--accent);font-size:13px"></span></h3>
+    <h3>Sua dich vu <span id="editSttLabel" style="color:var(--accent);font-size:13px"></span></h3>
     <input type="hidden" id="editRowIndex">
-    <div class="edit-lbl">Tên khách hàng</div>
-    <input type="text" class="form-control" id="editCustomer" placeholder="Tên khách hàng">
-    <div class="edit-lbl">Số điện thoại</div>
-    <input type="tel" class="form-control" id="editPhone" placeholder="Số điện thoại">
-    <div class="edit-lbl">Dịch vụ</div>
-    <input type="text" class="form-control" id="editService" placeholder="Dịch vụ">
-    <div class="edit-lbl">Tiền tua (K)</div>
+    <div class="edit-lbl">So dien thoai</div>
+    <div class="edit-ac">
+      <input type="tel" class="form-control" id="editPhone" placeholder="So dien thoai..."
+        autocomplete="off" oninput="onEditPhoneInput(this.value)" onfocus="onEditPhoneInput(this.value)">
+      <div class="dropdown" id="editPhoneDrop"></div>
+    </div>
+    <div class="edit-lbl">Ten khach hang</div>
+    <input type="text" class="form-control" id="editCustomer" placeholder="Ten khach hang" autocomplete="off">
+    <div class="edit-lbl">Dich vu</div>
+    <div class="edit-ac">
+      <input type="text" class="form-control" id="editService" placeholder="Tim dich vu..."
+        autocomplete="off" oninput="onEditSvcInput(this.value)" onfocus="onEditSvcInput(this.value)">
+      <div class="dropdown" id="editSvcDrop"></div>
+    </div>
+    <div class="edit-lbl">Tien tua (K)</div>
     <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control" id="editAmount" placeholder="0">
-    <div class="edit-lbl">Tăng ca (K)</div>
+    <div class="edit-lbl">Tang ca (K)</div>
     <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control" id="editOvertime" placeholder="0">
-    <div class="edit-lbl">Ghi chú</div>
-    <input type="text" class="form-control" id="editNote" placeholder="Ghi chú">
+    <div class="edit-lbl">Ghi chu</div>
+    <input type="text" class="form-control" id="editNote" placeholder="Ghi chu">
     <div class="edit-actions">
-      <button class="btn btn-secondary" onclick="closeEdit()">Huỷ</button>
-      <button class="btn btn-primary" id="editSaveBtn" onclick="doUpdate()">&#10003; Cập nhật</button>
+      <button class="btn btn-secondary" onclick="closeEdit()">Huy</button>
+      <button class="btn btn-primary" id="editSaveBtn" onclick="doUpdate()">&#10003; Cap nhat</button>
     </div>
   </div>
 </div>
@@ -240,29 +284,83 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   <div class="view-header">
     <div class="back-btn" onclick="closeView()">&#8592;</div>
     <div>
-      <div class="view-title">Danh sách hôm nay</div>
+      <div class="view-title" id="viewTitle">Danh sach</div>
       <div class="view-subtitle" id="viewSubtitle">...</div>
     </div>
   </div>
   <div class="view-content">
+    <!-- Mode toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeDayBtn" onclick="setViewMode('day')">Theo ngay</button>
+      <button class="mode-btn" id="modeMonthBtn" onclick="setViewMode('month')">Theo thang</button>
+    </div>
+    <!-- Ngày (mode=day) -->
+    <div id="dayPeriod">
+      <div class="date-row" style="margin-bottom:16px">
+        <div class="spin-btn" onclick="viewChangeDate(-1)">&#8249;</div>
+        <div class="date-input-wrap">
+          <input type="text" class="form-control" id="viewDateInput" maxlength="10" readonly style="font-size:15px;font-weight:600;text-align:center">
+        </div>
+        <div class="spin-btn" onclick="viewChangeDate(1)">&#8250;</div>
+      </div>
+    </div>
+    <!-- Tháng (mode=month) -->
+    <div id="monthPeriod" style="display:none">
+      <div class="period-row">
+        <select class="form-control" id="viewMonth" onchange="loadViewMonth()"></select>
+        <select class="form-control" id="viewYear" onchange="loadViewMonth()"></select>
+      </div>
+    </div>
+    <!-- Total -->
     <div class="total-card">
-      <div class="total-label">Tổng cộng</div>
+      <div class="total-label">Tong cong</div>
       <div class="total-amount" id="totalAmount">0K</div>
-      <div class="total-unit">nghìn đồng</div>
+      <div class="total-unit">nghin dong</div>
       <div class="total-breakdown" id="totalBreakdown"></div>
-      <div class="total-count" id="totalCount">0 lượt dịch vụ</div>
+      <div class="total-count" id="totalCount">0 luot dich vu</div>
     </div>
     <div id="recordsList"></div>
   </div>
   <div class="bottom-actions">
-    <button class="btn btn-secondary" onclick="closeView()">&#8592; Quay về nhập liệu</button>
+    <button class="btn btn-secondary" onclick="closeView()">&#8592; Quay ve nhap lieu</button>
+  </div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div class="screen" id="adminScreen">
+  <div class="topbar">
+    <div class="topbar-title">Admin <span class="admin-badge">ADMIN</span></div>
+    <div class="topbar-user" onclick="showLogout()">
+      <div class="avatar" style="background:linear-gradient(135deg,var(--warn),#f59e0b)">A</div>
+      <span>Admin</span>
+    </div>
+  </div>
+  <div class="admin-content">
+    <div class="card">
+      <div class="card-title">Xem theo nhan vien</div>
+      <div class="input-label" style="margin-bottom:6px">Nhan vien</div>
+      <select class="form-control" id="adminStaffSelect" onchange="onAdminStaffChange()" style="margin-bottom:14px">
+        <option value="">-- Chon nhan vien --</option>
+      </select>
+      <div class="input-label" style="margin-bottom:6px">Thang</div>
+      <div class="period-row">
+        <select class="form-control" id="adminMonth" onchange="loadAdminData()"></select>
+        <select class="form-control" id="adminYear" onchange="loadAdminData()"></select>
+      </div>
+    </div>
+    <div id="adminSummary"></div>
+    <div id="adminDayList"></div>
+  </div>
+  <div class="bottom-actions">
+    <button class="btn btn-secondary" onclick="doLogout()">Dang xuat</button>
   </div>
 </div>
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
 const API_URL  = 'https://script.google.com/macros/s/AKfycby0O7CA6TxMFqWe7LHGw6d78Y-spVkgGiI-oC28AcZqcHSSbNpvGrjvJ2kymdlWtgAh/exec';
-var PASSWORD = '1234';
+var PASSWORD       = '1234';
+var ADMIN_PASSWORD = 'admin123'; // doi mat khau admin tai day
 
 // ── STATE ───────────────────────────────────────────────────
 var currentUser = null;
@@ -296,11 +394,17 @@ function api(params, cb) {
 // ── INIT ────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
   var saved = localStorage.getItem('loggedUser');
-  if (saved) {
+  var savedPass = localStorage.getItem('loggedPass');
+  if (saved === '__admin__' && savedPass === ADMIN_PASSWORD) {
+    showScreen('adminScreen');
+    initAdminScreen(null);
+  } else if (saved && saved !== '__admin__') {
     currentUser = saved;
-    initMainScreen(function() { showScreen('mainScreen'); });
+    showScreen('mainScreen');
+    initMainScreen(null);
   } else {
-    loadStaffList(function() { showScreen('loginScreen'); });
+    showScreen('loginScreen');
+    loadStaffList(null);
   }
 });
 
@@ -313,24 +417,24 @@ function showScreen(id) {
 
 // ── STAFF LIST ──────────────────────────────────────────────
 function loadStaffList(done) {
-  showLoading(true, 'Đang tải danh sách nhân viên...');
+  // Luon show login truoc, roi moi load data
+  if (done) done();
+  showLoading(true, 'Dang tai danh sach...');
   api({ action: 'getStaff' }, function(err, result) {
     showLoading(false);
     var sel = document.getElementById('staffSelect');
     if (err || !result || !result.success) {
-      sel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
-      showLoginError('Không kết nối được. Kiểm tra lại API_URL.');
-      if (done) done();
+      sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
+      showLoginError('Khong ket noi duoc API. Kiem tra lai URL.');
       return;
     }
-    sel.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
+    sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
     for (var i = 0; i < result.data.length; i++) {
       var opt = document.createElement('option');
       opt.value = result.data[i];
       opt.textContent = result.data[i];
       sel.appendChild(opt);
     }
-    if (done) done();
   });
 }
 
@@ -339,11 +443,21 @@ function doLogin() {
   var staff = document.getElementById('staffSelect').value;
   var pass  = document.getElementById('passwordInput').value;
   hideLoginError();
-  if (!staff) return showLoginError('Vui lòng chọn nhân viên');
-  if (pass !== PASSWORD) return showLoginError('Mật khẩu không đúng');
+  if (!staff) return showLoginError('Vui lòng chon nhan vien');
+  // Admin login
+  if (pass === ADMIN_PASSWORD) {
+    localStorage.setItem('loggedUser', '__admin__');
+    localStorage.setItem('loggedPass', pass);
+    showScreen('adminScreen');
+    initAdminScreen(null);
+    return;
+  }
+  if (pass !== PASSWORD) return showLoginError('Mat khau khong dung');
   currentUser = staff;
   localStorage.setItem('loggedUser', staff);
-  initMainScreen(function() { showScreen('mainScreen'); });
+  localStorage.setItem('loggedPass', pass);
+  showScreen('mainScreen');
+  initMainScreen(null);
 }
 
 function showLoginError(msg) {
@@ -361,11 +475,13 @@ function initMainScreen(done) {
   document.getElementById('avatarText').textContent = currentUser.charAt(0).toUpperCase();
   setDateToday();
   if (!document.querySelector('.svc-row')) addSvcRow();
-  showLoading(true, 'Đang tải dữ liệu...');
+  if (done) done();
+  // Load data ngam sau khi da hien man hinh
+  showLoading(true, 'Dang tai du lieu...');
   var loaded = 0;
   function checkDone() {
     loaded++;
-    if (loaded === 2) { showLoading(false); if (done) done(); }
+    if (loaded === 2) showLoading(false);
   }
   api({ action: 'getCustomers' }, function(err, res) {
     if (!err && res && res.success) customers = res.data;
@@ -639,6 +755,315 @@ function renderRecords(data, total, totalTua, totalOvertime) {
   list.innerHTML = html;
 }
 
+// ── VIEW MODE ──────────────────────────────────────────────
+var viewMode = 'day'; // 'day' | 'month'
+var viewDate = new Date();
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.getElementById('modeDayBtn').className   = 'mode-btn' + (mode === 'day'   ? ' active' : '');
+  document.getElementById('modeMonthBtn').className = 'mode-btn' + (mode === 'month' ? ' active' : '');
+  document.getElementById('dayPeriod').style.display   = mode === 'day'   ? '' : 'none';
+  document.getElementById('monthPeriod').style.display = mode === 'month' ? '' : 'none';
+  if (mode === 'day')   loadViewDay();
+  if (mode === 'month') loadViewMonth();
+}
+
+function viewChangeDate(delta) {
+  viewDate.setDate(viewDate.getDate() + delta);
+  document.getElementById('viewDateInput').value = fmtDate(viewDate);
+  loadViewDay();
+}
+
+function loadViewDay() {
+  var date = document.getElementById('viewDateInput').value;
+  currentViewDate = date;
+  document.getElementById('viewSubtitle').textContent = currentUser + ' — ' + date;
+  document.getElementById('recordsList').innerHTML = '';
+  document.getElementById('totalAmount').textContent = '...';
+  document.getElementById('totalBreakdown').innerHTML = '';
+  document.getElementById('totalCount').textContent = '';
+  showLoading(true, 'Dang tai...');
+  api({ action: 'getRecords', staff: currentUser, date: date }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success) return showToast('Loi tai du lieu', 'error');
+    renderRecords(result.data, result.total, result.totalTua, result.totalOvertime);
+  });
+}
+
+function loadViewMonth() {
+  var month = document.getElementById('viewMonth').value;
+  var year  = document.getElementById('viewYear').value;
+  var staff = currentUser;
+  document.getElementById('viewSubtitle').textContent = staff + ' — Thang ' + month + '/' + year;
+  document.getElementById('recordsList').innerHTML = '';
+  document.getElementById('totalAmount').textContent = '...';
+  document.getElementById('totalBreakdown').innerHTML = '';
+  document.getElementById('totalCount').textContent = '';
+  showLoading(true, 'Dang tai...');
+  api({ action: 'getRecordsByMonth', staff: staff, month: month, year: year }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success) return showToast('Loi tai du lieu', 'error');
+    renderMonthView(result);
+  });
+}
+
+function renderMonthView(result) {
+  var days = result.days || [];
+  var total = result.total || 0;
+  var totalTua = result.totalTua || 0;
+  var totalOvertime = result.totalOvertime || 0;
+  var totalRecords = 0;
+  for (var i = 0; i < days.length; i++) totalRecords += days[i].records.length;
+
+  document.getElementById('totalAmount').textContent = fmtK(total);
+  document.getElementById('totalCount').textContent  = totalRecords + ' luot | ' + days.length + ' ngay';
+  var bd = document.getElementById('totalBreakdown');
+  if (totalOvertime > 0) {
+    bd.innerHTML = '<span>Tua: <b style="color:var(--success)">' + fmtK(totalTua) + '</b></span>' +
+                   '<span>Tang ca: <b style="color:var(--warn)">' + fmtK(totalOvertime) + '</b></span>';
+  } else { bd.innerHTML = ''; }
+
+  var list = document.getElementById('recordsList');
+  if (!days.length) {
+    list.innerHTML = '<div class="empty-state"><div class="emoji">&#128219;</div><p>Chua co du lieu thang nay</p></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < days.length; i++) {
+    var d = days[i];
+    var did = 'daycard_' + i;
+    html += '<div class="day-card">' +
+      '<div class="day-card-header" onclick="toggleDayCard('' + did + '')">' +
+        '<div>' +
+          '<div class="day-card-date">' + esc(d.date) + '</div>' +
+          '<div class="day-card-count">' + d.records.length + ' dich vu' + (d.totalOt > 0 ? ' | Tang ca: ' + fmtK(d.totalOt) : '') + '</div>' +
+        '</div>' +
+        '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px">' +
+          '<div class="day-card-total">' + fmtK(d.total) + '</div>' +
+          '<div class="day-card-chevron" id="chv_' + did + '">&#8250;</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="day-card-body" id="' + did + '">';
+    for (var j = 0; j < d.records.length; j++) {
+      var r = d.records[j];
+      var otStr = r.overtime ? '<div class="day-record-ot">Tang ca: ' + fmtK(r.overtime) + '</div>' : '';
+      html += '<div class="day-record">' +
+        '<div class="day-record-stt">' + esc(r.stt) + '</div>' +
+        '<div class="day-record-body">' +
+          '<div class="day-record-name">' + esc(r.customerName || '—') + '</div>' +
+          '<div class="day-record-svc">' + esc(r.service) + '</div>' +
+          otStr +
+        '</div>' +
+        '<div class="day-record-amt">' + fmtK(r.amount) + '</div>' +
+      '</div>';
+    }
+    html += '</div></div>';
+  }
+  list.innerHTML = html;
+}
+
+function toggleDayCard(id) {
+  var body = document.getElementById(id);
+  var chv  = document.getElementById('chv_' + id);
+  if (!body) return;
+  var isOpen = body.className.indexOf('open') !== -1;
+  body.className = 'day-card-body' + (isOpen ? '' : ' open');
+  chv.className  = 'day-card-chevron' + (isOpen ? '' : ' open');
+}
+
+function initMonthYearSelects(monthId, yearId) {
+  var now = new Date();
+  var ms = document.getElementById(monthId);
+  var ys = document.getElementById(yearId);
+  ms.innerHTML = '';
+  for (var m = 1; m <= 12; m++) {
+    var opt = document.createElement('option');
+    opt.value = pad(m);
+    opt.textContent = 'Thang ' + m;
+    if (m === now.getMonth() + 1) opt.selected = true;
+    ms.appendChild(opt);
+  }
+  ys.innerHTML = '';
+  for (var y = now.getFullYear() - 1; y <= now.getFullYear() + 1; y++) {
+    var opt2 = document.createElement('option');
+    opt2.value = y;
+    opt2.textContent = y;
+    if (y === now.getFullYear()) opt2.selected = true;
+    ys.appendChild(opt2);
+  }
+}
+
+function fmtDate(d) {
+  return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear();
+}
+
+// ── ADMIN SCREEN ────────────────────────────────────────────
+function initAdminScreen(done) {
+  initMonthYearSelects('adminMonth', 'adminYear');
+  if (done) done();
+  // Load staff list ngam
+  api({ action: 'getStaff' }, function(err, result) {
+    var sel = document.getElementById('adminStaffSelect');
+    sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
+    if (!err && result && result.success) {
+      for (var i = 0; i < result.data.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = result.data[i];
+        opt.textContent = result.data[i];
+        sel.appendChild(opt);
+      }
+    }
+  });
+}
+
+function onAdminStaffChange() {
+  document.getElementById('adminSummary').innerHTML = '';
+  document.getElementById('adminDayList').innerHTML = '';
+  var staff = document.getElementById('adminStaffSelect').value;
+  if (!staff) return;
+  loadAdminData();
+}
+
+function loadAdminData() {
+  var staff = document.getElementById('adminStaffSelect').value;
+  if (!staff) return;
+  var month = document.getElementById('adminMonth').value;
+  var year  = document.getElementById('adminYear').value;
+  showLoading(true, 'Dang tai...');
+  api({ action: 'getRecordsByMonth', staff: staff, month: month, year: year }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success) return showToast('Loi: ' + (result ? result.error : err), 'error');
+    renderAdminMonth(staff, month, year, result);
+  });
+}
+
+function renderAdminMonth(staff, month, year, result) {
+  var days = result.days || [];
+  var total = result.total || 0;
+  var totalTua = result.totalTua || 0;
+  var totalOt  = result.totalOvertime || 0;
+  var totalRecords = 0;
+  for (var i = 0; i < days.length; i++) totalRecords += days[i].records.length;
+
+  var bdHtml = totalOt > 0
+    ? '<div class="ms-breakdown"><span>Tua: <b style="color:var(--success)">' + fmtK(totalTua) + '</b></span><span>Tang ca: <b style="color:var(--warn)">' + fmtK(totalOt) + '</b></span></div>'
+    : '';
+  document.getElementById('adminSummary').innerHTML =
+    '<div class="month-summary">' +
+      '<div style="font-size:12px;color:#8899cc;margin-bottom:4px">' + esc(staff) + ' — Thang ' + month + '/' + year + '</div>' +
+      '<div class="ms-amount">' + fmtK(total) + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">nghin dong</div>' +
+      bdHtml +
+      '<div class="ms-count">' + totalRecords + ' luot | ' + days.length + ' ngay</div>' +
+    '</div>';
+
+  if (!days.length) {
+    document.getElementById('adminDayList').innerHTML = '<div class="empty-state"><div class="emoji">&#128219;</div><p>Chua co du lieu</p></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < days.length; i++) {
+    var d = days[i];
+    var did = 'adm_' + i;
+    html += '<div class="day-card">' +
+      '<div class="day-card-header" onclick="toggleDayCard('' + did + '')">' +
+        '<div>' +
+          '<div class="day-card-date">' + esc(d.date) + '</div>' +
+          '<div class="day-card-count">' + d.records.length + ' dich vu' + (d.totalOt > 0 ? ' | Tang ca: ' + fmtK(d.totalOt) : '') + '</div>' +
+        '</div>' +
+        '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px">' +
+          '<div class="day-card-total">' + fmtK(d.total) + '</div>' +
+          '<div class="day-card-chevron" id="chv_' + did + '">&#8250;</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="day-card-body" id="' + did + '">';
+    for (var j = 0; j < d.records.length; j++) {
+      var r = d.records[j];
+      var otStr = r.overtime ? '<div class="day-record-ot">Tang ca: ' + fmtK(r.overtime) + '</div>' : '';
+      html += '<div class="day-record">' +
+        '<div class="day-record-stt">' + esc(r.stt) + '</div>' +
+        '<div class="day-record-body">' +
+          '<div class="day-record-name">' + esc(r.customerName || '—') + '</div>' +
+          '<div class="day-record-svc">' + esc(r.service) + '</div>' +
+          otStr +
+        '</div>' +
+        '<div class="day-record-amt">' + fmtK(r.amount) + '</div>' +
+      '</div>';
+    }
+    html += '</div></div>';
+  }
+  document.getElementById('adminDayList').innerHTML = html;
+}
+
+// ── EDIT AUTOCOMPLETE ──────────────────────────────────────
+function onEditPhoneInput(val) {
+  var drop = document.getElementById('editPhoneDrop');
+  // đóng dropdown dịch vụ
+  document.getElementById('editSvcDrop').classList.remove('open');
+  if (!val || val.length < 1) { drop.classList.remove('open'); return; }
+  var q = val.toLowerCase();
+  var matches = [];
+  for (var i = 0; i < customers.length; i++) {
+    var c = customers[i];
+    if (c.phone.indexOf(val) !== -1 || (c.name && c.name.toLowerCase().indexOf(q) !== -1)) {
+      matches.push(c);
+      if (matches.length >= 8) break;
+    }
+  }
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop._data = matches;
+  var html = '';
+  for (var j = 0; j < matches.length; j++) {
+    html += '<div class="dropdown-item" onclick="selectEditPhone(' + j + ')">';
+    html += '<strong>' + esc(matches[j].phone) + '</strong>';
+    html += '<small>' + esc(matches[j].name || 'Chua co ten') + '</small>';
+    html += '</div>';
+  }
+  drop.innerHTML = html;
+  drop.classList.add('open');
+}
+
+function selectEditPhone(i) {
+  var drop = document.getElementById('editPhoneDrop');
+  var c = drop._data[i];
+  document.getElementById('editPhone').value    = c.phone;
+  document.getElementById('editCustomer').value = c.name;
+  drop.classList.remove('open');
+}
+
+function onEditSvcInput(val) {
+  var drop = document.getElementById('editSvcDrop');
+  // đóng dropdown phone
+  document.getElementById('editPhoneDrop').classList.remove('open');
+  if (!val) { drop.classList.remove('open'); return; }
+  var q = val.toLowerCase();
+  var matches = [];
+  for (var i = 0; i < services.length; i++) {
+    if (services[i].name.toLowerCase().indexOf(q) !== -1) {
+      matches.push(services[i]);
+      if (matches.length >= 8) break;
+    }
+  }
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop._data = matches;
+  var html = '';
+  for (var j = 0; j < matches.length; j++) {
+    var priceStr = matches[j].price ? '<small>&#128176; ' + fmtK(matches[j].price) + '</small>' : '';
+    html += '<div class="dropdown-item" onclick="selectEditSvc(' + j + ')">' + esc(matches[j].name) + priceStr + '</div>';
+  }
+  drop.innerHTML = html;
+  drop.classList.add('open');
+}
+
+function selectEditSvc(i) {
+  var drop = document.getElementById('editSvcDrop');
+  var s = drop._data[i];
+  document.getElementById('editService').value = s.name;
+  if (s.price) document.getElementById('editAmount').value = s.price;
+  drop.classList.remove('open');
+}
+
 // ── EDIT RECORD ────────────────────────────────────────────
 var currentRecords = [];
 var currentViewDate = '';
@@ -717,6 +1142,7 @@ function showLogout()  { document.getElementById('logoutModal').classList.add('s
 function closeLogout() { document.getElementById('logoutModal').classList.remove('show'); }
 function doLogout() {
   localStorage.removeItem('loggedUser');
+  localStorage.removeItem('loggedPass');
   currentUser = null; customers = []; services = [];
   closeLogout();
   document.getElementById('passwordInput').value = '';
@@ -732,6 +1158,10 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.autocomplete-wrap') && !e.target.closest('.svc-ac'))
     closeAllDropdowns();
   if (e.target === document.getElementById('editModal')) closeEdit();
+  if (!e.target.closest('.edit-ac')) {
+    document.getElementById('editPhoneDrop').classList.remove('open');
+    document.getElementById('editSvcDrop').classList.remove('open');
+  }
 });
 
 // ── LOADING / TOAST ─────────────────────────────────────────
