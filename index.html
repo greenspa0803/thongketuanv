@@ -371,6 +371,11 @@ var svcRowId    = 0;
 
 // ── API ─────────────────────────────────────────────────────
 function api(params, cb) {
+  // Kiem tra URL da duoc dien chua
+  if (!API_URL || API_URL.indexOf('YOUR_APPS_SCRIPT') !== -1) {
+    cb(new Error('API_URL chua duoc dien. Mo app.html va thay YOUR_APPS_SCRIPT_URL_HERE bang URL that.'), null);
+    return;
+  }
   var url = API_URL + '?';
   var parts = [];
   var keys = Object.keys(params);
@@ -381,14 +386,23 @@ function api(params, cb) {
     parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
   }
   url += parts.join('&');
-  fetch(url, { method: 'GET', redirect: 'follow' })
-    .then(function(res) { return res.text(); })
-    .then(function(text) {
-      var data;
-      try { data = JSON.parse(text); } catch(e) { cb(new Error('JSON parse error: ' + text.slice(0, 80)), null); return; }
-      cb(null, data);
-    })
-    .catch(function(err) { cb(err, null); });
+  try {
+    fetch(url, { method: 'GET', redirect: 'follow' })
+      .then(function(res) { return res.text(); })
+      .then(function(text) {
+        var data;
+        try { data = JSON.parse(text); } catch(e) {
+          cb(new Error('Phan hoi khong hop le: ' + text.slice(0, 80)), null);
+          return;
+        }
+        cb(null, data);
+      })
+      .catch(function(err) {
+        cb(new Error('Loi mang: ' + err.message), null);
+      });
+  } catch(e) {
+    cb(new Error('Loi fetch: ' + e.message), null);
+  }
 }
 
 // ── INIT ────────────────────────────────────────────────────
@@ -437,7 +451,7 @@ function loadStaffList(done) {
     var sel = document.getElementById('staffSelect');
     if (err || !result || !result.success) {
       sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
-      showLoginError('Khong ket noi duoc API. Kiem tra lai URL.');
+      showLoginError('Khong ket noi duoc API: ' + (err ? err.message : 'Unknown') + debugHint());
       return;
     }
     sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
@@ -451,6 +465,10 @@ function loadStaffList(done) {
 }
 
 // ── LOGIN ───────────────────────────────────────────────────
+function debugHint() {
+  return ' | URL: ' + (API_URL || 'TRONG').slice(0, 40);
+}
+
 function doLogin() {
   var staff = document.getElementById('staffSelect').value;
   var pass  = document.getElementById('passwordInput').value;
@@ -475,9 +493,19 @@ function doLogin() {
   api({ action: 'verifyLogin', staff: staff, pass: pass }, function(err, result) {
     showLoading(false);
     if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Dang nhap'; }
-    if (err) return showLoginError('Loi ket noi, thu lai');
-    if (!result || !result.success) {
-      return showLoginError(result ? result.error : 'Loi xac thuc');
+    if (err) {
+      showLoginError('[Loi ket noi] ' + err.message + debugHint());
+      return;
+    }
+    if (!result) {
+      showLoginError('[Loi] Khong nhan duoc phan hoi tu server.' + debugHint());
+      return;
+    }
+    if (!result.success) {
+      var msg = result.error || 'Xac thuc that bai';
+      if (result.debug_match) msg += ' | Sheet: ' + result.debug_match;
+      showLoginError(msg);
+      return;
     }
     // Login thanh cong
     currentUser = staff;
