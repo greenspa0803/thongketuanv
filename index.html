@@ -699,22 +699,19 @@ function resetForm() {
 // ── VIEW ────────────────────────────────────────────────────
 function openView() {
   showScreen('viewScreen');
-  var date = document.getElementById('dateInput').value;
-  currentViewDate = date;
-  document.getElementById('viewSubtitle').textContent = currentUser + ' — ' + date;
-  document.getElementById('recordsList').innerHTML = '';
-  document.getElementById('totalAmount').textContent = '...';
-  document.getElementById('totalBreakdown').innerHTML = '';
-  document.getElementById('totalCount').textContent = '';
-  showLoading(true, 'Đang tải...');
-  api({ action: 'getRecords', staff: currentUser, date: date }, function(err, result) {
-    showLoading(false);
-    if (err || !result || !result.success) {
-      showToast('Lỗi tải dữ liệu', 'error');
-      return;
-    }
-    renderRecords(result.data, result.total, result.totalTua, result.totalOvertime);
-  });
+  // Sync date từ màn nhập liệu
+  viewDate = new Date(currentDate.getTime());
+  var dateStr = document.getElementById('dateInput').value;
+  document.getElementById('viewDateInput').value = dateStr;
+  // Init month/year selects
+  initMonthYearSelects('viewMonth', 'viewYear');
+  // Reset về mode ngày
+  viewMode = 'day';
+  document.getElementById('modeDayBtn').className   = 'mode-btn active';
+  document.getElementById('modeMonthBtn').className = 'mode-btn';
+  document.getElementById('dayPeriod').style.display   = '';
+  document.getElementById('monthPeriod').style.display = 'none';
+  loadViewDay();
 }
 
 function renderRecords(data, total, totalTua, totalOvertime) {
