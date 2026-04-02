@@ -105,6 +105,13 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 .edit-lbl{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:5px;margin-top:12px}
 .edit-lbl:first-of-type{margin-top:0}
 .edit-actions{display:-webkit-flex;display:flex;gap:10px;margin-top:20px}
+.btn-danger{background:var(--danger);color:#fff;border:none}
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);display:none;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;z-index:1200;padding:24px}
+.confirm-overlay.show{display:-webkit-flex;display:flex}
+.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center}
+.confirm-box h4{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.confirm-box p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.confirm-actions{display:-webkit-flex;display:flex;gap:10px}
 .edit-ac{position:relative;width:100%}
 .edit-ac .dropdown{z-index:1100;position:absolute;top:calc(100% + 2px);left:0;right:0}
 .modal{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 36px}
@@ -171,6 +178,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   <div class="edit-modal">
     <h3>Sua dich vu <span id="editSttLabel" style="color:var(--accent);font-size:13px"></span></h3>
     <input type="hidden" id="editRowIndex">
+    <div class="edit-lbl">Ngay</div>
+    <input type="text" class="form-control" id="editDate" placeholder="DD/MM/YYYY" maxlength="10" oninput="formatEditDate(this)">
     <div class="edit-lbl">So dien thoai</div>
     <div class="edit-ac">
       <input type="tel" class="form-control" id="editPhone" placeholder="So dien thoai..."
@@ -191,9 +200,25 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control" id="editOvertime" placeholder="0">
     <div class="edit-lbl">Ghi chu</div>
     <input type="text" class="form-control" id="editNote" placeholder="Ghi chu">
+    <div style="margin-top:20px">
+      <button class="btn btn-danger" id="editDeleteBtn" onclick="confirmDeleteRecord()" style="margin-bottom:10px">&#128465; Xoa dong nay</button>
+    </div>
     <div class="edit-actions">
       <button class="btn btn-secondary" onclick="closeEdit()">Huy</button>
       <button class="btn btn-primary" id="editSaveBtn" onclick="doUpdate()">&#10003; Cap nhat</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-overlay" id="confirmDelete">
+  <div class="confirm-box">
+    <div style="font-size:36px;margin-bottom:8px">🗑️</div>
+    <h4>Xoa du lieu?</h4>
+    <p id="confirmDeleteMsg">Ban co chac muon xoa dong nay? Hanh dong nay khong the hoan tac.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirmDelete()">Huy</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="doDelete()">Xoa</button>
     </div>
   </div>
 </div>
@@ -358,7 +383,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const API_URL  = 'https://script.google.com/macros/s/AKfycby0O7CA6TxMFqWe7LHGw6d78Y-spVkgGiI-oC28AcZqcHSSbNpvGrjvJ2kymdlWtgAh/exec';
+var API_URL        = 'YOUR_APPS_SCRIPT_URL_HERE';
 var ADMIN_PASSWORD = 'admin123'; // doi mat khau admin tai day
 // Mat khau nhan vien lay tu cot B Sheet1 - khong can khai bao o day
 
@@ -1130,6 +1155,7 @@ function openEdit(idx) {
   if (!r) return;
   document.getElementById('editRowIndex').value  = idx;
   document.getElementById('editSttLabel').textContent = 'STT ' + r.stt;
+  document.getElementById('editDate').value       = currentViewDate;
   document.getElementById('editCustomer').value  = r.customerName || '';
   document.getElementById('editPhone').value     = r.phone || '';
   document.getElementById('editService').value   = r.service || '';
@@ -1153,7 +1179,9 @@ function doUpdate() {
   var amount   = document.getElementById('editAmount').value.trim();
   var overtime = document.getElementById('editOvertime').value.trim() || '0';
   var note     = document.getElementById('editNote').value.trim();
+  var newDate  = document.getElementById('editDate').value.trim();
 
+  if (!newDate)  return showToast('Vui long nhap ngay', 'error');
   if (!service)  return showToast('Vui lòng nhập dịch vụ', 'error');
   if (!amount)   return showToast('Vui lòng nhập số tiền', 'error');
 
@@ -1163,6 +1191,7 @@ function doUpdate() {
     action: 'updateRecord',
     staff: currentUser,
     date: currentViewDate,
+    newDate: newDate,
     stt: r.stt,
     customerName: customer,
     phone: phone,
@@ -1181,6 +1210,52 @@ function doUpdate() {
     // Reload lại danh sách
     reloadView();
   });
+}
+
+// ── DELETE RECORD ──────────────────────────────────────────
+function confirmDeleteRecord() {
+  var idx = parseInt(document.getElementById('editRowIndex').value);
+  var r = currentRecords[idx];
+  if (!r) return;
+  var msg = 'Xoa "' + (r.customerName || 'khach hang') + '" - ' + (r.service || '') + ' (' + fmtK(r.amount) + ')?';
+  document.getElementById('confirmDeleteMsg').textContent = msg;
+  document.getElementById('confirmDelete').classList.add('show');
+}
+
+function closeConfirmDelete() {
+  document.getElementById('confirmDelete').classList.remove('show');
+}
+
+function doDelete() {
+  var idx = parseInt(document.getElementById('editRowIndex').value);
+  var r = currentRecords[idx];
+  if (!r) return;
+  document.getElementById('confirmDeleteBtn').disabled = true;
+  showLoading(true, 'Dang xoa...');
+  api({
+    action: 'deleteRecord',
+    staff: currentUser,
+    date: currentViewDate,
+    stt: r.stt
+  }, function(err, result) {
+    document.getElementById('confirmDeleteBtn').disabled = false;
+    showLoading(false);
+    if (err || !result || !result.success) {
+      return showToast('Loi: ' + (result ? result.error : err), 'error');
+    }
+    closeConfirmDelete();
+    closeEdit();
+    showToast('Da xoa!', 'success');
+    reloadView();
+  });
+}
+
+// ── FORMAT DATE INPUT ──────────────────────────────────────
+function formatEditDate(input) {
+  var v = input.value.replace(/[^0-9]/g, '');
+  if (v.length >= 3 && v.length <= 4) v = v.slice(0,2) + '/' + v.slice(2);
+  else if (v.length >= 5) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
+  input.value = v;
 }
 
 function reloadView() {
