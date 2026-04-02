@@ -280,7 +280,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       <div class="input-group">
         <div class="input-label">Số điện thoại</div>
         <div class="autocomplete-wrap">
-          <input type="tel" class="form-control" id="phoneInput" placeholder="Nhập số điện thoại..." autocomplete="off" oninput="onPhoneInput(this.value)">
+          <input type="tel" class="form-control" id="phoneInput" placeholder="Nhập số điện thoại..." autocomplete="off" oninput="onPhoneInput(this.value)" onfocus="onPhoneInput(this.value)">
           <div class="dropdown" id="phoneDropdown"></div>
         </div>
       </div>
@@ -600,14 +600,12 @@ function pad(n) { return n < 10 ? '0' + n : '' + n; }
 // ── PHONE AUTOCOMPLETE ──────────────────────────────────────
 function onPhoneInput(val) {
   var drop = document.getElementById('phoneDropdown');
-  if (!val || val.length < 2) { drop.classList.remove('open'); return; }
-  var q = val.toLowerCase();
+  var q = val ? val.toLowerCase() : '';
   var matches = [];
   for (var i = 0; i < customers.length; i++) {
     var c = customers[i];
-    if (c.phone.indexOf(val) !== -1 || (c.name && c.name.toLowerCase().indexOf(q) !== -1)) {
+    if (!q || c.phone.indexOf(val) !== -1 || (c.name && c.name.toLowerCase().indexOf(q) !== -1)) {
       matches.push(c);
-      if (matches.length >= 8) break;
     }
   }
   if (!matches.length) { drop.classList.remove('open'); return; }
@@ -616,7 +614,7 @@ function onPhoneInput(val) {
   for (var j = 0; j < matches.length; j++) {
     html += '<div class="dropdown-item" onclick="selectPhone(' + j + ')">';
     html += '<strong>' + esc(matches[j].phone) + '</strong>';
-    html += '<small>' + esc(matches[j].name || 'Chưa có tên') + '</small>';
+    html += '<small>' + esc(matches[j].name || 'Chua co ten') + '</small>';
     html += '</div>';
   }
   drop.innerHTML = html;
@@ -671,13 +669,11 @@ function onSvcInput(input, id) {
   for (var i = 0; i < allDrops.length; i++) {
     if (allDrops[i].id !== 'sd_' + id) allDrops[i].classList.remove('open');
   }
-  if (!val) { drop.classList.remove('open'); return; }
-  var q = val.toLowerCase();
+  var q = val ? val.toLowerCase() : '';
   var matches = [];
   for (var j = 0; j < services.length; j++) {
-    if (services[j].name.toLowerCase().indexOf(q) !== -1) {
+    if (!q || services[j].name.toLowerCase().indexOf(q) !== -1) {
       matches.push(services[j]);
-      if (matches.length >= 8) break;
     }
   }
   if (!matches.length) { drop.classList.remove('open'); return; }
@@ -1093,16 +1089,13 @@ function renderAdminMonth(staff, month, year, result) {
 // ── EDIT AUTOCOMPLETE ──────────────────────────────────────
 function onEditPhoneInput(val) {
   var drop = document.getElementById('editPhoneDrop');
-  // đóng dropdown dịch vụ
   document.getElementById('editSvcDrop').classList.remove('open');
-  if (!val || val.length < 1) { drop.classList.remove('open'); return; }
-  var q = val.toLowerCase();
+  var q = val ? val.toLowerCase() : '';
   var matches = [];
   for (var i = 0; i < customers.length; i++) {
     var c = customers[i];
-    if (c.phone.indexOf(val) !== -1 || (c.name && c.name.toLowerCase().indexOf(q) !== -1)) {
+    if (!q || c.phone.indexOf(val) !== -1 || (c.name && c.name.toLowerCase().indexOf(q) !== -1)) {
       matches.push(c);
-      if (matches.length >= 8) break;
     }
   }
   if (!matches.length) { drop.classList.remove('open'); return; }
@@ -1128,15 +1121,12 @@ function selectEditPhone(i) {
 
 function onEditSvcInput(val) {
   var drop = document.getElementById('editSvcDrop');
-  // đóng dropdown phone
   document.getElementById('editPhoneDrop').classList.remove('open');
-  if (!val) { drop.classList.remove('open'); return; }
-  var q = val.toLowerCase();
+  var q = val ? val.toLowerCase() : '';
   var matches = [];
   for (var i = 0; i < services.length; i++) {
-    if (services[i].name.toLowerCase().indexOf(q) !== -1) {
+    if (!q || services[i].name.toLowerCase().indexOf(q) !== -1) {
       matches.push(services[i]);
-      if (matches.length >= 8) break;
     }
   }
   if (!matches.length) { drop.classList.remove('open'); return; }
