@@ -525,13 +525,18 @@ function api(params, cb) {
 window.addEventListener('DOMContentLoaded', function() {
   var saved     = localStorage.getItem('loggedUser');
   var savedPass = localStorage.getItem('loggedPass');
+
   if (saved === '__admin__' && savedPass === ADMIN_PASSWORD) {
     showScreen('adminScreen');
     initAdminScreen(null);
+
   } else if (saved && saved !== '__admin__' && savedPass) {
+
     // Verify lai voi server phong truong hop bi khoa sau khi da login
     showScreen('mainScreen'); // hien truoc tranh man hinh trang
+
     api({ action: 'verifyLogin', staff: saved, pass: savedPass }, function(err, result) {
+
       if (err || !result || !result.success) {
         // Bi khoa hoac sai pass -> dang xuat
         localStorage.removeItem('loggedUser');
@@ -541,9 +546,18 @@ window.addEventListener('DOMContentLoaded', function() {
         if (result && result.error) showLoginError(result.error);
         return;
       }
+
       currentUser = saved;
+
+      // ✅ QUAN TRỌNG NHẤT (BẠN ĐANG THIẾU)
+      canReport = result.canReport === true;
+
+      // ✅ DEBUG (nên thêm để kiểm tra)
+      console.log("Auto login canReport =", canReport);
+
       initMainScreen(null);
     });
+
   } else {
     showScreen('loginScreen');
     loadStaffList(null);
@@ -623,6 +637,10 @@ function doLogin() {
       showLoginError(msg);
       return;
     }
+
+  // ✅ BẮT BUỘC PHẢI CÓ
+  canReport = result.canReport === true;
+	
     // Login thanh cong
     currentUser = staff;
     localStorage.setItem('loggedUser', staff);
