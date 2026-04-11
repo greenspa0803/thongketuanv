@@ -690,6 +690,21 @@ function initMainScreen(done) {
   });
 }
 
+function switchTab(tab) {
+  var tuaScreen = document.getElementById('tuaScreen');
+  var revenueScreen = document.getElementById('revenueScreen');
+
+  if (tab === 'tua') {
+    if (tuaScreen) tuaScreen.style.display = '';
+    if (revenueScreen) revenueScreen.style.display = 'none';
+  } else {
+    if (tuaScreen) tuaScreen.style.display = 'none';
+    if (revenueScreen) revenueScreen.style.display = '';
+  }
+
+  console.log("Switched to:", tab); // debug
+}
+
 // ── DATE ────────────────────────────────────────────────────
 function setDateToday() { currentDate = new Date(); updateDateDisplay(); }
 function updateDateDisplay() {
