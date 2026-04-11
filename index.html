@@ -263,8 +263,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   <div class="topbar">
     <div id="tabToggle" style="display:none">
       <div class="tab-toggle">
-        <button class="tab-btn active" id="tabTua" onclick="switchTab('tua')">✂️ Tua</button>
-        <button class="tab-btn" id="tabRev" onclick="switchTab('revenue')">💰 Doanh thu</button>
+        <button class="tab-btn active" id="tabTua" onclick="switchTab('mainScreen')">✂️ Tua</button>
+        <button class="tab-btn" id="tabRev" onclick="switchTab('revenueScreen')">💰 Doanh thu</button>
       </div>
     </div>
     <div class="topbar-title" id="mainTitle">Nhập liệu</div>
@@ -327,8 +327,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   <div class="topbar">
     <div id="revTabToggle">
       <div class="tab-toggle">
-        <button class="tab-btn" id="revTabTua" onclick="switchTab('tua')">✂️ Tua</button>
-        <button class="tab-btn active" id="revTabRev" onclick="switchTab('revenue')">💰 Doanh thu</button>
+        <button class="tab-btn" id="revTabTua" onclick="switchTab('mainScreen')">✂️ Tua</button>
+        <button class="tab-btn active" id="revTabRev" onclick="switchTab('revenueScreen')">💰 Doanh thu</button>
       </div>
     </div>
     <div class="topbar-user" onclick="showLogout()">
@@ -691,10 +691,10 @@ function initMainScreen(done) {
 }
 
 function switchTab(tab) {
-  var tuaScreen = document.getElementById('tua');
-  var revenueScreen = document.getElementById('revenue');
+  var tuaScreen = document.getElementById('mainScreen');
+  var revenueScreen = document.getElementById('revenueScreen');
 
-  if (tab === 'tua') {
+  if (tab === 'mainScreen') {
     if (tuaScreen) tuaScreen.style.display = '';
     if (revenueScreen) revenueScreen.style.display = 'none';
   } else {
