@@ -542,6 +542,8 @@ window.addEventListener('DOMContentLoaded', function() {
         return;
       }
       currentUser = saved;
+      canReport   = result.canReport === true;
+      localStorage.setItem('canReport', canReport ? '1' : '0');
       initMainScreen(null);
     });
   } else {
@@ -625,8 +627,12 @@ function doLogin() {
     }
     // Login thanh cong
     currentUser = staff;
-    localStorage.setItem('loggedUser', staff);
-    localStorage.setItem('loggedPass', pass);
+    canReport   = result.canReport === true;
+    localStorage.setItem('loggedUser',  staff);
+    localStorage.setItem('loggedPass',  pass);
+    localStorage.setItem('canReport',   canReport ? '1' : '0');
+    // Debug: hiện toast để xác nhận canReport
+    showToast('Xin chao ' + staff + (canReport ? ' | Co quyen bao cao' : ''), 'success');
     showScreen('mainScreen');
     initMainScreen(null);
   });
