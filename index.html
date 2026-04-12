@@ -210,6 +210,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 .rv-item-val{font-size:15px;font-weight:700;color:var(--text)}
 .rv-costs{border-top:1px solid var(--border);padding-top:8px;margin-top:4px}
 .rv-cost-row{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;font-size:13px;color:var(--muted);padding:3px 0}
+/* Rev view record edit button */
+.rev-view-record .btn{width:auto;display:inline-block}
 </style>
 </head>
 <body>
@@ -390,6 +392,13 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   </div>
   <div class="rev-content">
 
+    <!-- Thông báo đã nhập -->
+    <div id="revExistsNotice" style="display:none;background:#1a3a1a;border:1px solid var(--success);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
+      <div style="font-size:14px;font-weight:600;color:var(--success);margin-bottom:6px">&#10003; Da co bao cao ngay nay</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Xem lai bao cao ben duoi. Neu can chinh sua, bam nut Sua.</div>
+      <button class="btn btn-secondary" style="padding:9px;font-size:13px;width:auto;margin-right:8px" onclick="openRevEdit(getRevDateStr())">&#9998; Sua bao cao</button>
+    </div>
+
     <!-- Date bar -->
     <div class="rev-datebar">
       <div class="spin-btn" onclick="revChangeDate(-1)">&#8249;</div>
@@ -464,7 +473,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   </div>
   <div class="bottom-actions">
     <button class="btn btn-outline" onclick="openRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#128203; Xem</button>
-    <button class="btn btn-success" onclick="saveRevenue()" style="-webkit-flex:2;flex:2;padding:15px">&#128190; Lưu báo cáo</button>
+    <button class="btn btn-success" id="revSaveBtn" onclick="saveRevenue()" style="-webkit-flex:2;flex:2;padding:15px">&#128190; Lưu báo cáo</button>
   </div>
 </div>
 
@@ -578,6 +587,31 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   </div>
   <div class="bottom-actions">
     <button class="btn btn-secondary" onclick="doLogout()">Dang xuat</button>
+  </div>
+</div>
+
+
+<!-- REV EDIT MODAL -->
+<div class="modal-overlay" id="revEditModal">
+  <div class="edit-modal">
+    <h3>Sua bao cao <span id="revEditDate" style="color:var(--accent);font-size:13px"></span></h3>
+    <div class="edit-lbl">Tien mat</div>
+    <input type="text" inputmode="numeric" class="form-control" id="revEditTienMat" placeholder="0" oninput="fmtRevEditInput(this)">
+    <div class="edit-lbl">Chuyen khoan</div>
+    <input type="text" inputmode="numeric" class="form-control" id="revEditChuyenKH" placeholder="0" oninput="fmtRevEditInput(this)">
+    <div class="edit-lbl">Tien tip CK</div>
+    <input type="text" inputmode="numeric" class="form-control" id="revEditTipCK" placeholder="0" oninput="fmtRevEditInput(this)">
+    <div class="edit-lbl">Chi phi</div>
+    <div class="cost-rows" id="revEditCostRows"></div>
+    <button class="add-cost-btn" onclick="addRevEditCostRow('','')">&#xFF0B; Them chi phi</button>
+    <div class="edit-lbl">Giu tien mat</div>
+    <input type="text" class="form-control" id="revEditGiuTM" readonly style="color:var(--success)">
+    <div class="edit-lbl">Giu chuyen khoan</div>
+    <input type="text" class="form-control" id="revEditGiuCK" readonly style="color:var(--accent2)">
+    <div class="edit-actions" style="margin-top:20px">
+      <button class="btn btn-secondary" onclick="closeRevEdit()">Huy</button>
+      <button class="btn btn-success" onclick="doUpdateRevenue()">&#10003; Cap nhat</button>
+    </div>
   </div>
 </div>
 
@@ -1548,11 +1582,11 @@ function switchTab(tab) {
 // ─── REVENUE SCREEN ───────────────────────────────────────────
 var revCostId  = 0;
 var revCurDate = new Date();
+var revExistsMode = false; // true = ngày đã có báo cáo
 
 function initRevenueScreen() {
   revCurDate = new Date();
   setRevDate(revCurDate);
-  resetRevForm();
   loadRevenue(fmtDate(revCurDate));
 }
 
@@ -1566,7 +1600,6 @@ function setRevDate(d) {
 function revChangeDate(delta) {
   revCurDate.setDate(revCurDate.getDate() + delta);
   setRevDate(revCurDate);
-  resetRevForm();
   loadRevenue(fmtDate(revCurDate));
 }
 
@@ -1575,7 +1608,6 @@ function onRevDatePick(val) {
   var p = val.split('-');
   revCurDate = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
   setRevDate(revCurDate);
-  resetRevForm();
   loadRevenue(fmtDate(revCurDate));
 }
 
@@ -1592,35 +1624,57 @@ function resetRevForm() {
   calcRev();
 }
 
+function setRevExistsMode(exists, data) {
+  revExistsMode = exists;
+  var notice = document.getElementById('revExistsNotice');
+  var form   = document.getElementById('revFormArea');
+  var savBtn = document.getElementById('revSaveBtn');
+  if (exists) {
+    // Hiện thông báo đã nhập, ẩn nút lưu
+    notice.style.display = '';
+    savBtn.style.display = 'none';
+    // Điền data vào form (readonly để xem)
+    if (data) fillRevForm(data);
+  } else {
+    notice.style.display = 'none';
+    savBtn.style.display = '';
+    resetRevForm();
+  }
+}
+
+function fillRevForm(d) {
+  document.getElementById('revTienMat').value  = d.tienMat  ? fmtRevNum(d.tienMat)  : '';
+  document.getElementById('revChuyenKH').value = d.chuyenKH ? fmtRevNum(d.chuyenKH) : '';
+  document.getElementById('revTipCK').value    = d.tipCK    ? fmtRevNum(d.tipCK)    : '';
+  document.getElementById('costRows').innerHTML = '';
+  revCostId = 0;
+  if (d.costs && d.costs.length) {
+    for (var i = 0; i < d.costs.length; i++)
+      addCostRow(d.costs[i].name, d.costs[i].amount ? fmtRevNum(d.costs[i].amount) : '');
+  }
+  calcRev();
+}
+
 function loadRevenue(date) {
   showLoading(true, 'Dang tai...');
   api({ action: 'getRevenue', staff: currentUser, date: date }, function(err, result) {
     showLoading(false);
-    if (err || !result || !result.success || !result.data) return;
-    var d = result.data;
-    document.getElementById('revTienMat').value  = d.tienMat  ? fmtRevNum(d.tienMat)  : '';
-    document.getElementById('revChuyenKH').value = d.chuyenKH ? fmtRevNum(d.chuyenKH) : '';
-    document.getElementById('revTipCK').value    = d.tipCK    ? fmtRevNum(d.tipCK)    : '';
-    document.getElementById('costRows').innerHTML = '';
-    revCostId = 0;
-    if (d.costs && d.costs.length) {
-      for (var i = 0; i < d.costs.length; i++) {
-        addCostRow(d.costs[i].name, d.costs[i].amount ? fmtRevNum(d.costs[i].amount) : '');
-      }
+    if (err || !result || !result.success) return;
+    if (result.data) {
+      setRevExistsMode(true, result.data);
+    } else {
+      setRevExistsMode(false, null);
     }
-    calcRev();
   });
 }
 
 function fmtRevNum(n) {
   return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
 }
-
 function parseRevNum(s) {
   if (!s) return 0;
   return parseFloat(s.toString().replace(/[.]/g, '').replace(/,/g, '.')) || 0;
 }
-
 function formatRevInput(input) {
   var raw = input.value.replace(/[^0-9]/g, '');
   if (!raw) { input.value = ''; calcRev(); return; }
@@ -1634,15 +1688,14 @@ function calcRev() {
   var tip = parseRevNum(document.getElementById('revTipCK').value);
   var totalCost = 0;
   var rows = document.querySelectorAll('.cost-row');
-  for (var i = 0; i < rows.length; i++) {
+  for (var i = 0; i < rows.length; i++)
     totalCost += parseRevNum(rows[i].querySelector('.cost-amt').value);
-  }
   var tongDT = tm + ck;
   var giuTM  = tm - tip - totalCost;
   var giuCK  = ck + tip;
-  document.getElementById('revTotal').textContent      = fmtRevNum(tongDT);
-  document.getElementById('revGiuTMBanner').textContent= fmtRevNum(giuTM);
-  document.getElementById('revGiuCKBanner').textContent= fmtRevNum(giuCK);
+  document.getElementById('revTotal').textContent       = fmtRevNum(tongDT);
+  document.getElementById('revGiuTMBanner').textContent = fmtRevNum(giuTM);
+  document.getElementById('revGiuCKBanner').textContent = fmtRevNum(giuCK);
   document.getElementById('revGiuTM').value = fmtRevNum(giuTM);
   document.getElementById('revGiuCK').value = fmtRevNum(giuCK);
 }
@@ -1668,7 +1721,7 @@ function removeCostRow(id) {
   if (row) { row.parentNode.removeChild(row); calcRev(); }
 }
 
-function saveRevenue() {
+function getRevPayload() {
   var date     = getRevDateStr();
   var tienMat  = parseRevNum(document.getElementById('revTienMat').value);
   var chuyenKH = parseRevNum(document.getElementById('revChuyenKH').value);
@@ -1680,22 +1733,131 @@ function saveRevenue() {
   for (var i = 0; i < rows.length; i++) {
     var n = rows[i].querySelector('.cost-name').value.trim();
     var a = parseRevNum(rows[i].querySelector('.cost-amt').value);
-    if (n || a) { costs.push({name:n, amount:a}); totalCost += a; }
+    if (n || a) { costs.push({name:n,amount:a}); totalCost += a; }
   }
   var giuTM = tienMat - tipCK - totalCost;
   var giuCK = chuyenKH + tipCK;
+  return { date:date, tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
+           tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs) };
+}
+
+function saveRevenue() {
+  var payload = getRevPayload();
   showLoading(true, 'Dang luu...');
-  api({
-    action:'saveRevenue', staff:currentUser, date:date,
-    tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
-    tongGiuTM:giuTM, tongGiuCK:giuCK,
-    costs:JSON.stringify(costs)
-  }, function(err, result) {
+  api(Object.assign({ action:'saveRevenue', staff:currentUser }, payload), function(err, result) {
     showLoading(false);
     if (err || !result || !result.success)
       return showToast('Loi luu: '+(result?result.error:(err?err.message:'Unknown')), 'error');
+    if (result.exists) {
+      // Backend báo đã tồn tại
+      setRevExistsMode(true, result.data);
+      showToast('Ngay nay da co bao cao!', 'error');
+      return;
+    }
     showToast('Da luu bao cao!', 'success');
-    resetRevForm();
+    setRevExistsMode(true, null);
+    loadRevenue(payload.date);
+  });
+}
+
+// ─── REV EDIT (sửa báo cáo đã lưu) ──────────────────────────
+function openRevEdit(dateStr) {
+  // Dùng lại data từ form hiện tại (đã fill sẵn)
+  var d = dateStr || getRevDateStr();
+  document.getElementById('revEditDate').textContent = d;
+  // Copy giá trị form vào edit modal
+  document.getElementById('revEditTienMat').value  = document.getElementById('revTienMat').value;
+  document.getElementById('revEditChuyenKH').value = document.getElementById('revChuyenKH').value;
+  document.getElementById('revEditTipCK').value    = document.getElementById('revTipCK').value;
+  // Clone cost rows
+  var editCostRows = document.getElementById('revEditCostRows');
+  editCostRows.innerHTML = '';
+  revEditCostId = 0;
+  var rows = document.querySelectorAll('.cost-row');
+  for (var i = 0; i < rows.length; i++) {
+    var n = rows[i].querySelector('.cost-name').value;
+    var a = rows[i].querySelector('.cost-amt').value;
+    addRevEditCostRow(n, a);
+  }
+  calcRevEdit();
+  document.getElementById('revEditModal').classList.add('show');
+}
+
+function closeRevEdit() {
+  document.getElementById('revEditModal').classList.remove('show');
+}
+
+var revEditCostId = 0;
+function addRevEditCostRow(name, amount) {
+  revEditCostId++;
+  var id = revEditCostId;
+  var container = document.getElementById('revEditCostRows');
+  var row = document.createElement('div');
+  row.className = 'cost-row';
+  row.setAttribute('data-ecid', id);
+  var nv = (name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  row.innerHTML =
+    '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRevEdit()">' +
+    '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="fmtRevEditInput(this)">' +
+    '<div class="cost-rm" onclick="rmRevEditCostRow('+id+')">&#215;</div>';
+  container.appendChild(row);
+  calcRevEdit();
+}
+function rmRevEditCostRow(id) {
+  var row = document.querySelector('[data-ecid="'+id+'"]');
+  if (row) { row.parentNode.removeChild(row); calcRevEdit(); }
+}
+function fmtRevEditInput(input) {
+  var raw = input.value.replace(/[^0-9]/g, '');
+  if (!raw) { input.value = ''; calcRevEdit(); return; }
+  input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw,10));
+  calcRevEdit();
+}
+function calcRevEdit() {
+  var tm  = parseRevNum(document.getElementById('revEditTienMat').value);
+  var ck  = parseRevNum(document.getElementById('revEditChuyenKH').value);
+  var tip = parseRevNum(document.getElementById('revEditTipCK').value);
+  var totalCost = 0;
+  var rows = document.querySelectorAll('#revEditCostRows .cost-row');
+  for (var i = 0; i < rows.length; i++)
+    totalCost += parseRevNum(rows[i].querySelector('.cost-amt').value);
+  var giuTM = tm - tip - totalCost;
+  var giuCK = ck + tip;
+  document.getElementById('revEditGiuTM').value = fmtRevNum(giuTM);
+  document.getElementById('revEditGiuCK').value = fmtRevNum(giuCK);
+}
+
+function doUpdateRevenue() {
+  var date     = document.getElementById('revEditDate').textContent;
+  var tienMat  = parseRevNum(document.getElementById('revEditTienMat').value);
+  var chuyenKH = parseRevNum(document.getElementById('revEditChuyenKH').value);
+  var tipCK    = parseRevNum(document.getElementById('revEditTipCK').value);
+  var tongDT   = tienMat + chuyenKH;
+  var totalCost = 0;
+  var costs = [];
+  var rows = document.querySelectorAll('#revEditCostRows .cost-row');
+  for (var i = 0; i < rows.length; i++) {
+    var n = rows[i].querySelector('.cost-name').value.trim();
+    var a = parseRevNum(rows[i].querySelector('.cost-amt').value);
+    if (n || a) { costs.push({name:n,amount:a}); totalCost += a; }
+  }
+  var giuTM = tienMat - tipCK - totalCost;
+  var giuCK = chuyenKH + tipCK;
+  showLoading(true,'Dang cap nhat...');
+  api({
+    action:'updateRevenue', staff:currentUser, date:date,
+    tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
+    tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs)
+  }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success)
+      return showToast('Loi cap nhat: '+(result?result.error:(err?err.message:'Unknown')),'error');
+    showToast('Da cap nhat bao cao!','success');
+    closeRevEdit();
+    loadRevenue(date);
+    // Nếu đang ở revView thì reload
+    if (document.getElementById('revViewScreen').classList.contains('active'))
+      loadRevViewDay(date);
   });
 }
 
@@ -1709,7 +1871,6 @@ function openRevView() {
   initMonthYearSelects('revViewMonth','revViewYear');
   setRevViewMode('day');
 }
-
 function closeRevView() { showScreen('revenueScreen'); }
 
 function setRevViewMode(mode) {
@@ -1723,9 +1884,7 @@ function setRevViewMode(mode) {
     document.getElementById('revViewDateInput').value = dd+'/'+mm+'/'+yyyy;
     document.getElementById('revViewSubtitle').textContent = currentUser+' — '+dd+'/'+mm+'/'+yyyy;
     loadRevViewDay(dd+'/'+mm+'/'+yyyy);
-  } else {
-    loadRevMonth();
-  }
+  } else { loadRevMonth(); }
 }
 
 function revViewChangeDate(delta) {
@@ -1745,7 +1904,7 @@ function loadRevViewDay(date) {
       list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>Chua co bao cao ngay nay</p></div>';
       return;
     }
-    list.innerHTML=renderRevCard(result.data);
+    list.innerHTML=renderRevCard(result.data, true);
   });
 }
 
@@ -1762,30 +1921,55 @@ function loadRevMonth() {
       return;
     }
     var html='';
-    for(var i=0;i<result.data.length;i++) html+=renderRevCard(result.data[i]);
+    for(var i=0;i<result.data.length;i++) html+=renderRevCard(result.data[i], true);
     list.innerHTML=html;
   });
 }
 
-function renderRevCard(d) {
+function renderRevCard(d, showEdit) {
   var costsHtml='';
   if(d.costs&&d.costs.length){
     costsHtml='<div class="rv-costs">';
     for(var i=0;i<d.costs.length;i++){
-      costsHtml+='<div class="rv-cost-row"><span>'+escHtml(d.costs[i].name)+'</span><span>'+fmtRevNum(d.costs[i].amount)+'</span></div>';
+      costsHtml+='<div class="rv-cost-row"><span>'+escHtml(d.costs[i].name)+'</span><span style="color:var(--danger)">-'+fmtRevNum(d.costs[i].amount)+'</span></div>';
     }
     costsHtml+='</div>';
   }
+  var editBtn = showEdit
+    ? '<button class="btn btn-secondary" style="margin-top:12px;padding:10px;font-size:13px" onclick="openRevEditFromView(\''+escHtml(d.date)+'\')">&#9998; Chinh sua</button>'
+    : '';
   return '<div class="rev-view-record">'+
     '<div class="rev-view-date">'+escHtml(d.date)+'</div>'+
     '<div class="rv-grid">'+
       '<div class="rv-item"><div class="rv-item-lbl">Tong DT</div><div class="rv-item-val" style="color:var(--accent)">'+fmtRevNum(d.tongDT)+'</div></div>'+
       '<div class="rv-item"><div class="rv-item-lbl">Tien mat</div><div class="rv-item-val">'+fmtRevNum(d.tienMat)+'</div></div>'+
-      '<div class="rv-item"><div class="rv-item-lbl">Chuyen khoan</div><div class="rv-item-val">'+fmtRevNum(d.chuyenKH)+'</div></div>'+
+      '<div class="rv-item"><div class="rv-item-lbl">CK</div><div class="rv-item-val">'+fmtRevNum(d.chuyenKH)+'</div></div>'+
       '<div class="rv-item"><div class="rv-item-lbl">Tip CK</div><div class="rv-item-val">'+fmtRevNum(d.tipCK)+'</div></div>'+
       '<div class="rv-item"><div class="rv-item-lbl">Giu TM</div><div class="rv-item-val" style="color:var(--success)">'+fmtRevNum(d.tongGiuTM)+'</div></div>'+
       '<div class="rv-item"><div class="rv-item-lbl">Giu CK</div><div class="rv-item-val" style="color:var(--accent2)">'+fmtRevNum(d.tongGiuCK)+'</div></div>'+
-    '</div>'+costsHtml+'</div>';
+    '</div>'+costsHtml+editBtn+'</div>';
+}
+
+function openRevEditFromView(dateStr) {
+  // Load data từ API rồi mở edit modal
+  showLoading(true,'Dang tai...');
+  api({action:'getRevenue',staff:currentUser,date:dateStr},function(err,result){
+    showLoading(false);
+    if(err||!result||!result.success||!result.data) return showToast('Khong tai duoc du lieu','error');
+    var d = result.data;
+    document.getElementById('revEditDate').textContent = dateStr;
+    document.getElementById('revEditTienMat').value  = d.tienMat  ? fmtRevNum(d.tienMat)  : '';
+    document.getElementById('revEditChuyenKH').value = d.chuyenKH ? fmtRevNum(d.chuyenKH) : '';
+    document.getElementById('revEditTipCK').value    = d.tipCK    ? fmtRevNum(d.tipCK)    : '';
+    var editCostRows = document.getElementById('revEditCostRows');
+    editCostRows.innerHTML = '';
+    revEditCostId = 0;
+    if(d.costs&&d.costs.length){
+      for(var i=0;i<d.costs.length;i++) addRevEditCostRow(d.costs[i].name, d.costs[i].amount?fmtRevNum(d.costs[i].amount):'');
+    }
+    calcRevEdit();
+    document.getElementById('revEditModal').classList.add('show');
+  });
 }
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
