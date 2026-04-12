@@ -1627,13 +1627,11 @@ function resetRevForm() {
 function setRevExistsMode(exists, data) {
   revExistsMode = exists;
   var notice = document.getElementById('revExistsNotice');
-  var form   = document.getElementById('revFormArea');
   var savBtn = document.getElementById('revSaveBtn');
+  if (!notice || !savBtn) return;
   if (exists) {
-    // Hiện thông báo đã nhập, ẩn nút lưu
     notice.style.display = '';
     savBtn.style.display = 'none';
-    // Điền data vào form (readonly để xem)
     if (data) fillRevForm(data);
   } else {
     notice.style.display = 'none';
@@ -1762,25 +1760,9 @@ function saveRevenue() {
 
 // ─── REV EDIT (sửa báo cáo đã lưu) ──────────────────────────
 function openRevEdit(dateStr) {
-  // Dùng lại data từ form hiện tại (đã fill sẵn)
   var d = dateStr || getRevDateStr();
-  document.getElementById('revEditDate').textContent = d;
-  // Copy giá trị form vào edit modal
-  document.getElementById('revEditTienMat').value  = document.getElementById('revTienMat').value;
-  document.getElementById('revEditChuyenKH').value = document.getElementById('revChuyenKH').value;
-  document.getElementById('revEditTipCK').value    = document.getElementById('revTipCK').value;
-  // Clone cost rows
-  var editCostRows = document.getElementById('revEditCostRows');
-  editCostRows.innerHTML = '';
-  revEditCostId = 0;
-  var rows = document.querySelectorAll('.cost-row');
-  for (var i = 0; i < rows.length; i++) {
-    var n = rows[i].querySelector('.cost-name').value;
-    var a = rows[i].querySelector('.cost-amt').value;
-    addRevEditCostRow(n, a);
-  }
-  calcRevEdit();
-  document.getElementById('revEditModal').classList.add('show');
+  // Luôn load fresh từ API để đảm bảo đúng data
+  openRevEditFromView(d);
 }
 
 function closeRevEdit() {
@@ -1854,10 +1836,13 @@ function doUpdateRevenue() {
       return showToast('Loi cap nhat: '+(result?result.error:(err?err.message:'Unknown')),'error');
     showToast('Da cap nhat bao cao!','success');
     closeRevEdit();
+    // Reload data mới vào form
     loadRevenue(date);
-    // Nếu đang ở revView thì reload
-    if (document.getElementById('revViewScreen').classList.contains('active'))
+    // Nếu đang ở revView thì reload list
+    if (document.getElementById('revViewScreen') &&
+        document.getElementById('revViewScreen').classList.contains('active')) {
       loadRevViewDay(date);
+    }
   });
 }
 
