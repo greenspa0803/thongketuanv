@@ -510,6 +510,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   </div>
   <div class="bottom-actions">
     <button class="btn btn-secondary" onclick="closeRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#8592; Quay về</button>
+    <button class="btn btn-outline" onclick="debugRevData()" style="-webkit-flex:1;flex:1;padding:15px;font-size:12px">&#128269; Debug</button>
   </div>
 </div>
 
@@ -1954,6 +1955,24 @@ function openRevEditFromView(dateStr) {
     }
     calcRevEdit();
     document.getElementById('revEditModal').classList.add('show');
+  });
+}
+
+function debugRevData() {
+  showLoading(true, 'Debug...');
+  api({ action: 'debugRevenue', staff: currentUser }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success) {
+      alert('Loi debug: ' + (err ? err.message : JSON.stringify(result)));
+      return;
+    }
+    var msg = 'lastRow sheet: ' + result.lastRow + '\n';
+    msg += 'parsedDates: ' + JSON.stringify(result.parsedDates) + '\n\n';
+    msg += 'Raw rows (co du lieu):\n';
+    (result.rawRows || []).forEach(function(r) {
+      msg += 'Row ' + r.sheetRow + ': K_raw=' + JSON.stringify(r.K_raw) + ' K_norm=' + r.K_norm + ' P=' + r.P + ' Q=' + r.Q + '\n';
+    });
+    alert(msg);
   });
 }
 
