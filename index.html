@@ -472,7 +472,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 
   </div>
   <div class="bottom-actions">
-    <button class="btn btn-outline" onclick="openRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#128203; Xem</button>
+    <button class="btn btn-outline" onclick="openRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#128197; Xem tháng</button>
     <button class="btn btn-success" id="revSaveBtn" onclick="saveRevenue()" style="-webkit-flex:2;flex:2;padding:15px">&#128190; Lưu báo cáo</button>
   </div>
 </div>
@@ -510,7 +510,6 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   </div>
   <div class="bottom-actions">
     <button class="btn btn-secondary" onclick="closeRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#8592; Quay về</button>
-    <button class="btn btn-outline" onclick="debugRevData()" style="-webkit-flex:1;flex:1;padding:15px;font-size:12px">&#128269; Debug</button>
   </div>
 </div>
 
@@ -1958,23 +1957,6 @@ function openRevEditFromView(dateStr) {
   });
 }
 
-function debugRevData() {
-  showLoading(true, 'Debug...');
-  api({ action: 'debugRevenue', staff: currentUser }, function(err, result) {
-    showLoading(false);
-    if (err || !result || !result.success) {
-      alert('Loi debug: ' + (err ? err.message : JSON.stringify(result)));
-      return;
-    }
-    var msg = 'lastRow sheet: ' + result.lastRow + '\n';
-    msg += 'parsedDates: ' + JSON.stringify(result.parsedDates) + '\n\n';
-    msg += 'Raw rows (co du lieu):\n';
-    (result.rawRows || []).forEach(function(r) {
-      msg += 'Row ' + r.sheetRow + ': K_raw=' + JSON.stringify(r.K_raw) + ' K_norm=' + r.K_norm + ' P=' + r.P + ' Q=' + r.Q + '\n';
-    });
-    alert(msg);
-  });
-}
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
