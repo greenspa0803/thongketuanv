@@ -482,29 +482,14 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   <div class="view-header">
     <div class="back-btn" onclick="closeRevView()">&#8592;</div>
     <div>
-      <div class="view-title" id="revViewTitle">Báo cáo doanh thu</div>
+      <div class="view-title">Báo cáo doanh thu theo tháng</div>
       <div class="view-subtitle" id="revViewSubtitle">...</div>
     </div>
   </div>
   <div class="view-content">
-    <div class="mode-toggle">
-      <button class="mode-btn active" id="revModeDayBtn" onclick="setRevViewMode('day')">Theo ngày</button>
-      <button class="mode-btn" id="revModeMonthBtn" onclick="setRevViewMode('month')">Theo tháng</button>
-    </div>
-    <div id="revDayPeriod">
-      <div class="date-row" style="margin-bottom:16px">
-        <div class="spin-btn" onclick="revViewChangeDate(-1)">&#8249;</div>
-        <div class="date-input-wrap">
-          <input type="text" class="form-control" id="revViewDateInput" maxlength="10" readonly style="font-size:15px;font-weight:600;text-align:center">
-        </div>
-        <div class="spin-btn" onclick="revViewChangeDate(1)">&#8250;</div>
-      </div>
-    </div>
-    <div id="revMonthPeriod" style="display:none">
-      <div class="period-row">
-        <select class="form-control" id="revViewMonth" onchange="loadRevMonth()"></select>
-        <select class="form-control" id="revViewYear"  onchange="loadRevMonth()"></select>
-      </div>
+    <div class="period-row" style="margin-bottom:16px">
+      <select class="form-control" id="revViewMonth" onchange="loadRevMonth()"></select>
+      <select class="form-control" id="revViewYear"  onchange="loadRevMonth()"></select>
     </div>
     <div id="revViewList"></div>
   </div>
@@ -577,13 +562,19 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
         <option value="">-- Chon nhan vien --</option>
       </select>
       <div class="input-label" style="margin-bottom:6px">Thang</div>
-      <div class="period-row">
+      <div class="period-row" style="margin-bottom:14px">
         <select class="form-control" id="adminMonth" onchange="loadAdminData()"></select>
         <select class="form-control" id="adminYear" onchange="loadAdminData()"></select>
+      </div>
+      <!-- Toggle Tua / Doanh thu -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="adminTabTua" onclick="setAdminTab('tua')">✂️ Tua</button>
+        <button class="mode-btn" id="adminTabRev" onclick="setAdminTab('revenue')">💰 Doanh thu</button>
       </div>
     </div>
     <div id="adminSummary"></div>
     <div id="adminDayList"></div>
+    <div id="adminRevList"></div>
   </div>
   <div class="bottom-actions">
     <button class="btn btn-secondary" onclick="doLogout()">Dang xuat</button>
@@ -1270,10 +1261,31 @@ function fmtDate(d) {
 }
 
 // ── ADMIN SCREEN ────────────────────────────────────────────
+var adminTab = 'tua';
+
+function setAdminTab(tab) {
+  adminTab = tab;
+  document.getElementById('adminTabTua').className = 'mode-btn' + (tab==='tua' ? ' active' : '');
+  document.getElementById('adminTabRev').className = 'mode-btn' + (tab==='revenue' ? ' active' : '');
+  document.getElementById('adminSummary').innerHTML = '';
+  document.getElementById('adminDayList').innerHTML = '';
+  document.getElementById('adminRevList').innerHTML = '';
+  var staff = document.getElementById('adminStaffSelect').value;
+  if (staff) loadAdminData();
+}
+
+function onAdminStaffChange() {
+  document.getElementById('adminSummary').innerHTML = '';
+  document.getElementById('adminDayList').innerHTML = '';
+  document.getElementById('adminRevList').innerHTML = '';
+  var staff = document.getElementById('adminStaffSelect').value;
+  if (!staff) return;
+  loadAdminData();
+}
+
 function initAdminScreen(done) {
   initMonthYearSelects('adminMonth', 'adminYear');
   if (done) done();
-  // Load staff list ngam
   api({ action: 'getStaff' }, function(err, result) {
     var sel = document.getElementById('adminStaffSelect');
     sel.innerHTML = '<option value="">-- Chon nhan vien --</option>';
@@ -1288,83 +1300,113 @@ function initAdminScreen(done) {
   });
 }
 
-function onAdminStaffChange() {
-  document.getElementById('adminSummary').innerHTML = '';
-  document.getElementById('adminDayList').innerHTML = '';
-  var staff = document.getElementById('adminStaffSelect').value;
-  if (!staff) return;
-  loadAdminData();
-}
-
 function loadAdminData() {
   var staff = document.getElementById('adminStaffSelect').value;
   if (!staff) return;
   var month = document.getElementById('adminMonth').value;
   var year  = document.getElementById('adminYear').value;
+  document.getElementById('adminSummary').innerHTML = '';
+  document.getElementById('adminDayList').innerHTML = '';
+  document.getElementById('adminRevList').innerHTML = '';
   showLoading(true, 'Dang tai...');
-  api({ action: 'getRecordsByMonth', staff: staff, month: month, year: year }, function(err, result) {
-    showLoading(false);
-    if (err || !result || !result.success) return showToast('Loi: ' + (result ? result.error : err), 'error');
-    renderAdminMonth(staff, month, year, result);
-  });
+  if (adminTab === 'tua') {
+    api({ action: 'getRecordsByMonth', staff: staff, month: month, year: year }, function(err, result) {
+      showLoading(false);
+      if (err || !result || !result.success) return showToast('Loi: ' + (result ? result.error : err), 'error');
+      renderAdminTua(staff, month, year, result.data || []);
+    });
+  } else {
+    api({ action: 'getRevenueByMonth', staff: staff, month: month, year: year }, function(err, result) {
+      showLoading(false);
+      if (err || !result || !result.success) return showToast('Loi: ' + (result ? result.error : err), 'error');
+      renderAdminRevenue(staff, month, year, result.data || []);
+    });
+  }
 }
 
-function renderAdminMonth(staff, month, year, result) {
-  var days = result.days || [];
-  var total = result.total || 0;
-  var totalTua = result.totalTua || 0;
-  var totalOt  = result.totalOvertime || 0;
-  var totalRecords = 0;
-  for (var i = 0; i < days.length; i++) totalRecords += days[i].records.length;
-
-  var bdHtml = totalOt > 0
-    ? '<div class="ms-breakdown"><span>Tua: <b style="color:var(--success)">' + fmtK(totalTua) + '</b></span><span>Tang ca: <b style="color:var(--warn)">' + fmtK(totalOt) + '</b></span></div>'
+function renderAdminTua(staff, month, year, data) {
+  // data = flat array of records, group by date
+  var dayMap = {}, dayOrder = [];
+  data.forEach(function(r) {
+    if (!dayMap[r.date]) { dayMap[r.date] = { date:r.date, records:[], total:0, totalOt:0 }; dayOrder.push(r.date); }
+    dayMap[r.date].records.push(r);
+    dayMap[r.date].total   += r.amount   || 0;
+    dayMap[r.date].totalOt += r.overtime || 0;
+  });
+  dayOrder.sort(function(a,b){
+    var pa=a.split('/'),pb=b.split('/');
+    return new Date(pa[2],pa[1]-1,pa[0]) - new Date(pb[2],pb[1]-1,pb[0]);
+  });
+  var totalAll=0, totalOtAll=0;
+  dayOrder.forEach(function(d){ totalAll+=dayMap[d].total; totalOtAll+=dayMap[d].totalOt; });
+  var bdHtml = totalOtAll>0
+    ? '<div class="ms-breakdown"><span>Tua: <b style="color:var(--success)">'+fmtK(totalAll-totalOtAll)+'</b></span><span>Tang ca: <b style="color:var(--warn)">'+fmtK(totalOtAll)+'</b></span></div>'
     : '';
   document.getElementById('adminSummary').innerHTML =
-    '<div class="month-summary">' +
-      '<div style="font-size:12px;color:#8899cc;margin-bottom:4px">' + esc(staff) + ' — Thang ' + month + '/' + year + '</div>' +
-      '<div class="ms-amount">' + fmtK(total) + '</div>' +
-      '<div style="font-size:12px;color:var(--muted)">nghin dong</div>' +
-      bdHtml +
-      '<div class="ms-count">' + totalRecords + ' luot | ' + days.length + ' ngay</div>' +
+    '<div class="month-summary">'+
+      '<div style="font-size:12px;color:#8899cc;margin-bottom:4px">'+esc(staff)+' — Thang '+month+'/'+year+'</div>'+
+      '<div class="ms-amount">'+fmtK(totalAll)+'</div>'+
+      '<div style="font-size:12px;color:var(--muted)">nghin dong</div>'+
+      bdHtml+
+      '<div class="ms-count">'+data.length+' luot | '+dayOrder.length+' ngay</div>'+
     '</div>';
-
-  if (!days.length) {
-    document.getElementById('adminDayList').innerHTML = '<div class="empty-state"><div class="emoji">&#128219;</div><p>Chua co du lieu</p></div>';
+  if (!dayOrder.length) {
+    document.getElementById('adminDayList').innerHTML='<div class="empty-state"><div class="emoji">&#128219;</div><p>Chua co du lieu</p></div>';
     return;
   }
-  var html = '';
-  for (var i = 0; i < days.length; i++) {
-    var d = days[i];
-    var did = 'adm_' + i;
-    html += '<div class="day-card">' +
-      '<div class="day-card-header" data-did="' + did + '" onclick="handleDayCard(this)">' +
-        '<div>' +
-          '<div class="day-card-date">' + esc(d.date) + '</div>' +
-          '<div class="day-card-count">' + d.records.length + ' dich vu' + (d.totalOt > 0 ? ' | Tang ca: ' + fmtK(d.totalOt) : '') + '</div>' +
-        '</div>' +
-        '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px">' +
-          '<div class="day-card-total">' + fmtK(d.total) + '</div>' +
-          '<div class="day-card-chevron" id="chv_' + did + '">&#8250;</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="day-card-body" id="' + did + '">';
-    for (var j = 0; j < d.records.length; j++) {
-      var r = d.records[j];
-      var otStr = r.overtime ? '<div class="day-record-ot">Tang ca: ' + fmtK(r.overtime) + '</div>' : '';
-      html += '<div class="day-record">' +
-        '<div class="day-record-stt">' + esc(r.stt) + '</div>' +
-        '<div class="day-record-body">' +
-          '<div class="day-record-name">' + esc(r.customerName || '—') + '</div>' +
-          '<div class="day-record-svc">' + esc(r.service) + '</div>' +
-          otStr +
-        '</div>' +
-        '<div class="day-record-amt">' + fmtK(r.amount) + '</div>' +
+  var html='';
+  dayOrder.forEach(function(date, idx) {
+    var d=dayMap[date], did='adm_'+idx;
+    html+='<div class="day-card">'+
+      '<div class="day-card-header" data-did="'+did+'" onclick="handleDayCard(this)">'+
+        '<div>'+
+          '<div class="day-card-date">'+esc(d.date)+'</div>'+
+          '<div class="day-card-count">'+d.records.length+' dich vu'+(d.totalOt>0?' | Tang ca: '+fmtK(d.totalOt):'')+'</div>'+
+        '</div>'+
+        '<div style="display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px">'+
+          '<div class="day-card-total">'+fmtK(d.total)+'</div>'+
+          '<div class="day-card-chevron" id="chv_'+did+'">&#8250;</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="day-card-body" id="'+did+'">';
+    d.records.forEach(function(r){
+      var otStr=r.overtime?'<div class="day-record-ot">Tang ca: '+fmtK(r.overtime)+'</div>':'';
+      html+='<div class="day-record">'+
+        '<div class="day-record-stt">'+esc(r.stt)+'</div>'+
+        '<div class="day-record-body">'+
+          '<div class="day-record-name">'+esc(r.customer||'—')+'</div>'+
+          '<div class="day-record-svc">'+esc(r.service)+'</div>'+
+          otStr+
+        '</div>'+
+        '<div class="day-record-amt">'+fmtK(r.amount)+'</div>'+
       '</div>';
-    }
-    html += '</div></div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('adminDayList').innerHTML=html;
+}
+
+function renderAdminRevenue(staff, month, year, data) {
+  // data = array of revenue records from getRevenueByMonth
+  if (!data.length) {
+    document.getElementById('adminRevList').innerHTML='<div class="empty-state"><div class="emoji">&#128219;</div><p>Chua co bao cao doanh thu thang nay</p></div>';
+    return;
   }
-  document.getElementById('adminDayList').innerHTML = html;
+  var totalDT=0, totalGiuTM=0, totalGiuCK=0;
+  data.forEach(function(d){ totalDT+=d.tongDT||0; totalGiuTM=d.tongGiuTM||0; totalGiuCK=d.tongGiuCK||0; });
+  document.getElementById('adminSummary').innerHTML =
+    '<div class="month-summary">'+
+      '<div style="font-size:12px;color:#8899cc;margin-bottom:4px">'+esc(staff)+' — Doanh thu Thang '+month+'/'+year+'</div>'+
+      '<div class="ms-amount">'+fmtK(totalDT)+'</div>'+
+      '<div style="font-size:12px;color:var(--muted)">nghin dong tong doanh thu</div>'+
+      '<div class="ms-breakdown">'+
+        '<span>Tong giu TM: <b style="color:var(--success)">'+fmtK(totalGiuTM)+'</b></span>'+
+        '<span>Tong giu CK: <b style="color:var(--accent2)">'+fmtK(totalGiuCK)+'</b></span>'+
+      '</div>'+
+    '</div>';
+  var html='';
+  data.forEach(function(d){ html+=renderRevCard(d, false); });
+  document.getElementById('adminRevList').innerHTML=html;
 }
 
 // ── EDIT AUTOCOMPLETE ──────────────────────────────────────
@@ -1789,6 +1831,13 @@ function getRevPayload() {
 }
 
 function saveRevenue() {
+  // Validate bắt buộc
+  var tm  = parseRevNum(document.getElementById('revTienMat').value);
+  var ck  = parseRevNum(document.getElementById('revChuyenKH').value);
+  if (!tm && !ck) {
+    showToast('Vui long nhap it nhat Tien mat hoac Chuyen khoan!', 'error');
+    return;
+  }
   var payload = getRevPayload();
   showLoading(true, 'Dang luu...');
   api(Object.assign({ action:'saveRevenue', staff:currentUser }, payload), function(err, result) {
@@ -1916,51 +1965,16 @@ var revViewMode = 'day';
 
 function openRevView() {
   showScreen('revViewScreen');
-  revViewDate = new Date(revCurDate.getTime());
   initMonthYearSelects('revViewMonth','revViewYear');
-  setRevViewMode('day');
+  loadRevMonth();
 }
 function closeRevView() { showScreen('revenueScreen'); }
-
-function setRevViewMode(mode) {
-  revViewMode = mode;
-  document.getElementById('revModeDayBtn').className   = 'mode-btn'+(mode==='day'  ?' active':'');
-  document.getElementById('revModeMonthBtn').className = 'mode-btn'+(mode==='month'?' active':'');
-  document.getElementById('revDayPeriod').style.display   = mode==='day'  ?'':'none';
-  document.getElementById('revMonthPeriod').style.display = mode==='month'?'':'none';
-  if (mode==='day') {
-    var dd=pad(revViewDate.getDate()),mm=pad(revViewDate.getMonth()+1),yyyy=revViewDate.getFullYear();
-    document.getElementById('revViewDateInput').value = dd+'/'+mm+'/'+yyyy;
-    document.getElementById('revViewSubtitle').textContent = currentUser+' — '+dd+'/'+mm+'/'+yyyy;
-    loadRevViewDay(dd+'/'+mm+'/'+yyyy);
-  } else { loadRevMonth(); }
-}
-
-function revViewChangeDate(delta) {
-  revViewDate.setDate(revViewDate.getDate()+delta);
-  var dd=pad(revViewDate.getDate()),mm=pad(revViewDate.getMonth()+1),yyyy=revViewDate.getFullYear();
-  document.getElementById('revViewDateInput').value = dd+'/'+mm+'/'+yyyy;
-  document.getElementById('revViewSubtitle').textContent = currentUser+' — '+dd+'/'+mm+'/'+yyyy;
-  loadRevViewDay(dd+'/'+mm+'/'+yyyy);
-}
-
-function loadRevViewDay(date) {
-  showLoading(true,'Dang tai...');
-  api({action:'getRevenue',staff:currentUser,date:date},function(err,result){
-    showLoading(false);
-    var list=document.getElementById('revViewList');
-    if(err||!result||!result.success||!result.data){
-      list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>Chua co bao cao ngay nay</p></div>';
-      return;
-    }
-    list.innerHTML=renderRevCard(result.data, true);
-  });
-}
 
 function loadRevMonth() {
   var month=document.getElementById('revViewMonth').value;
   var year =document.getElementById('revViewYear').value;
-  document.getElementById('revViewSubtitle').textContent=currentUser+' — Thang '+month+'/'+year;
+  var sub = document.getElementById('revViewSubtitle');
+  if (sub) sub.textContent = currentUser+' — Thang '+month+'/'+year;
   showLoading(true,'Dang tai...');
   api({action:'getRevenueByMonth',staff:currentUser,month:month,year:year},function(err,result){
     showLoading(false);
