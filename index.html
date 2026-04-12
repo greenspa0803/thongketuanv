@@ -156,6 +156,66 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 .ms-amount{font-size:30px;font-weight:700;color:var(--accent);letter-spacing:-1px}
 .ms-breakdown{display:-webkit-flex;display:flex;-webkit-justify-content:center;justify-content:center;gap:16px;margin-top:8px;font-size:12px;color:#8899cc}
 .ms-count{font-size:12px;color:#8899cc;margin-top:6px}
+
+/* Revenue Screen Styles */
+.rev-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 110px; }
+.rev-datebar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.rev-date-wrap { flex: 1; position: relative; }
+.rev-date-display { 
+  background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--rs);
+  padding: 10px; text-align: center; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.rev-date-picker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+.rev-banner {
+  background: linear-gradient(135deg, #1e2a5e, #3b1f6a);
+  border: 1px solid #3a4a8a; border-radius: var(--r); padding: 20px; margin-bottom: 16px; text-align: center;
+}
+.rev-banner-lbl { font-size: 11px; color: #8899cc; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.rev-banner-amt { font-size: 28px; font-weight: 700; color: var(--accent); }
+.rev-banner-unit { font-size: 11px; color: #8899cc; margin-bottom: 12px; }
+.rev-banner-row { display: flex; border-top: 1px solid #3a4a8a; padding-top: 12px; }
+.rev-banner-item { flex: 1; }
+.rev-banner-item-lbl { font-size: 10px; color: #8899cc; margin-bottom: 2px; }
+.rev-banner-item-val { font-size: 14px; font-weight: 700; }
+
+.rev-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; margin-bottom: 16px; }
+.rev-card-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.rev-card-icon { font-size: 18px; }
+.rev-card-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+.rev-card-body { display: flex; flex-direction: column; gap: 12px; }
+
+.rev-field { position: relative; }
+.rev-field-label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.rev-field-label small { display: block; font-size: 9px; opacity: 0.7; }
+.rev-input {
+  width: 100%; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--rs);
+  padding: 10px 12px; color: var(--text); font-size: 15px; font-weight: 600; text-align: right; outline: none;
+}
+.rev-input:focus { border-color: var(--accent); }
+.rev-input.readonly-ok { background: #05966922; border-color: #05966944; color: var(--success); }
+.rev-input.readonly-ck { background: #6366f122; border-color: #6366f144; color: var(--accent2); }
+
+.cost-rows { display: flex; flex-direction: column; gap: 8px; }
+.cost-row { display: flex; gap: 6px; align-items: center; }
+.cost-name { flex: 2; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--rs); padding: 10px; color: var(--text); font-size: 14px; outline: none; }
+.cost-amt { flex: 1; background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--rs); padding: 10px; color: var(--text); font-size: 14px; text-align: right; outline: none; }
+.cost-rm { width: 34px; height: 38px; display: flex; align-items: center; justify-content: center; color: var(--danger); background: #f8717111; border: 1.5px solid #f8717133; border-radius: var(--rs); cursor: pointer; }
+.add-cost-btn {
+  width: 100%; padding: 10px; border: 1.5px dashed var(--border); border-radius: var(--rs);
+  background: transparent; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px;
+}
+
+/* Revenue View Card Styles */
+.rev-view-record { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; }
+.rev-view-date { font-size: 14px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.rv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rv-item { background: var(--surface2); padding: 8px 12px; border-radius: var(--rs); border: 1px solid var(--border); }
+.rv-item-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+.rv-item-val { font-size: 14px; font-weight: 700; }
+.rv-costs { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.rv-cost-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.rv-cost-row span:last-child { color: var(--danger); font-weight: 600; }
 </style>
 </head>
 <body>
