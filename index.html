@@ -263,8 +263,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   <div class="topbar">
     <div id="tabToggle" style="display:none">
       <div class="tab-toggle">
-        <button class="tab-btn active" id="tabTua" onclick="switchTab('mainScreen')">✂️ Tua</button>
-        <button class="tab-btn" id="tabRev" onclick="switchTab('revenueScreen')">💰 Doanh thu</button>
+        <button class="tab-btn active" id="tabTua" onclick="switchTab('tua')">✂️ Tua</button>
+        <button class="tab-btn" id="tabRev" onclick="switchTab('revenue')">💰 Doanh thu</button>
       </div>
     </div>
     <div class="topbar-title" id="mainTitle">Nhập liệu</div>
@@ -325,11 +325,9 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 <!-- REVENUE SCREEN -->
 <div class="screen" id="revenueScreen">
   <div class="topbar">
-    <div id="revTabToggle">
-      <div class="tab-toggle">
-        <button class="tab-btn" id="revTabTua" onclick="switchTab('mainScreen')">✂️ Tua</button>
-        <button class="tab-btn active" id="revTabRev" onclick="switchTab('revenueScreen')">💰 Doanh thu</button>
-      </div>
+    <div class="tab-toggle">
+      <button class="tab-btn" id="revTabTua" onclick="switchTab('tua')">✂️ Tua</button>
+      <button class="tab-btn active" id="revTabRev" onclick="switchTab('revenue')">💰 Doanh thu</button>
     </div>
     <div class="topbar-user" onclick="showLogout()">
       <div class="avatar" id="revAvatarText">?</div>
@@ -337,59 +335,118 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     </div>
   </div>
   <div class="rev-content">
-    <!-- Date picker -->
-    <div class="rev-date-wrap">
-      <div class="rev-date-display" id="revDateDisplay" onclick="document.getElementById('revDatePicker').click()">--/--/----</div>
-      <input type="date" id="revDatePicker" class="rev-date-picker" onchange="onRevDatePick(this.value)">
+
+    <!-- Date bar -->
+    <div class="rev-datebar">
+      <div class="spin-btn" onclick="revChangeDate(-1)">&#8249;</div>
+      <div class="rev-date-wrap">
+        <div class="rev-date-display" onclick="document.getElementById('revDatePicker').click()" id="revDateDisplay">--/--/----</div>
+        <input type="date" id="revDatePicker" class="rev-date-picker" onchange="onRevDatePick(this.value)">
+      </div>
+      <div class="spin-btn" onclick="revChangeDate(1)">&#8250;</div>
     </div>
 
-    <!-- Card tổng -->
-    <div class="rev-card" style="border-color:var(--accent)44">
-      <div class="rev-title">Tổng doanh thu</div>
-      <div style="text-align:center">
-        <input type="text" class="rev-input total" id="revTotal" readonly placeholder="0" style="width:100%;font-size:24px;text-align:center">
+    <!-- Banner tổng -->
+    <div class="rev-banner">
+      <div class="rev-banner-lbl">Tổng doanh thu</div>
+      <div class="rev-banner-amt" id="revTotal">0</div>
+      <div class="rev-banner-unit">đồng</div>
+      <div class="rev-banner-row">
+        <div class="rev-banner-item">
+          <div class="rev-banner-item-lbl">Giữ tiền mặt</div>
+          <div class="rev-banner-item-val" id="revGiuTMBanner" style="color:var(--success)">0</div>
+        </div>
+        <div style="width:1px;background:#3a4a8a"></div>
+        <div class="rev-banner-item">
+          <div class="rev-banner-item-lbl">Giữ chuyển khoản</div>
+          <div class="rev-banner-item-val" id="revGiuCKBanner" style="color:var(--accent2)">0</div>
+        </div>
       </div>
     </div>
 
-    <!-- Card thu -->
+    <!-- Card: Thu -->
     <div class="rev-card">
-      <div class="rev-title">Thu</div>
-      <div class="rev-row">
-        <div class="rev-label">💵 Tiền mặt</div>
-        <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this);calcRev()">
-      </div>
-      <div class="rev-row">
-        <div class="rev-label">🏦 Chuyển khoản</div>
-        <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this);calcRev()">
-      </div>
-      <div class="rev-row">
-        <div class="rev-label">💳 Tiền tip CK</div>
-        <input type="text" inputmode="numeric" class="rev-input" id="revTipCK" placeholder="0" oninput="formatRevInput(this);calcRev()">
+      <div class="rev-card-hdr"><span class="rev-card-icon">💰</span><span class="rev-card-title">Doanh thu</span></div>
+      <div class="rev-card-body">
+        <div class="rev-field">
+          <div class="rev-field-label">Tiền mặt</div>
+          <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)">
+        </div>
+        <div class="rev-field">
+          <div class="rev-field-label">Chuyển khoản</div>
+          <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)">
+        </div>
+        <div class="rev-field">
+          <div class="rev-field-label">Tiền tip CK<small>Trừ vào tiền mặt giữ</small></div>
+          <input type="text" inputmode="numeric" class="rev-input" id="revTipCK" placeholder="0" oninput="formatRevInput(this)">
+        </div>
       </div>
     </div>
 
-    <!-- Card chi phí -->
+    <!-- Card: Chi phí -->
     <div class="rev-card">
-      <div class="rev-title">Chi phí</div>
-      <div class="cost-rows" id="costRows"></div>
-      <button class="add-cost-btn" onclick="addCostRow()">+ Thêm chi phí</button>
+      <div class="rev-card-hdr"><span class="rev-card-icon">🧾</span><span class="rev-card-title">Chi phí</span></div>
+      <div class="rev-card-body">
+        <div class="cost-rows" id="costRows"></div>
+        <button class="add-cost-btn" onclick="addCostRow()">＋ Thêm chi phí</button>
+      </div>
     </div>
 
-    <!-- Tổng giữ -->
+    <!-- Card: Tổng giữ -->
     <div class="rev-card" style="border-color:var(--success)44">
-      <div class="rev-title">Tổng giữ</div>
-      <div class="rev-row">
-        <div class="rev-label">💵 Giữ tiền mặt</div>
-        <input type="text" class="rev-input giutm" id="revGiuTM" readonly placeholder="0">
-      </div>
-      <div class="rev-row">
-        <div class="rev-label">🏦 Giữ chuyển khoản</div>
-        <input type="text" class="rev-input giuck" id="revGiuCK" readonly placeholder="0">
+      <div class="rev-card-hdr"><span class="rev-card-icon">🏦</span><span class="rev-card-title">Tổng giữ lại</span></div>
+      <div class="rev-card-body">
+        <div class="rev-field">
+          <div class="rev-field-label">Giữ tiền mặt<small>TM − Tip − Chi phí</small></div>
+          <input type="text" class="rev-input readonly-ok" id="revGiuTM" readonly placeholder="0">
+        </div>
+        <div class="rev-field">
+          <div class="rev-field-label">Giữ chuyển khoản<small>CK + Tip</small></div>
+          <input type="text" class="rev-input readonly-ck" id="revGiuCK" readonly placeholder="0">
+        </div>
       </div>
     </div>
+
   </div>
   <div class="bottom-actions">
-    <button class="btn btn-success" style="flex:1;padding:15px" onclick="saveRevenue()">💾 Lưu báo cáo</button>
+    <button class="btn btn-outline" onclick="openRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#128203; Xem</button>
+    <button class="btn btn-success" onclick="saveRevenue()" style="-webkit-flex:2;flex:2;padding:15px">&#128190; Lưu báo cáo</button>
+  </div>
+</div>
+
+<!-- REV VIEW SCREEN -->
+<div class="screen" id="revViewScreen">
+  <div class="view-header">
+    <div class="back-btn" onclick="closeRevView()">&#8592;</div>
+    <div>
+      <div class="view-title" id="revViewTitle">Báo cáo doanh thu</div>
+      <div class="view-subtitle" id="revViewSubtitle">...</div>
+    </div>
+  </div>
+  <div class="view-content">
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="revModeDayBtn" onclick="setRevViewMode('day')">Theo ngày</button>
+      <button class="mode-btn" id="revModeMonthBtn" onclick="setRevViewMode('month')">Theo tháng</button>
+    </div>
+    <div id="revDayPeriod">
+      <div class="date-row" style="margin-bottom:16px">
+        <div class="spin-btn" onclick="revViewChangeDate(-1)">&#8249;</div>
+        <div class="date-input-wrap">
+          <input type="text" class="form-control" id="revViewDateInput" maxlength="10" readonly style="font-size:15px;font-weight:600;text-align:center">
+        </div>
+        <div class="spin-btn" onclick="revViewChangeDate(1)">&#8250;</div>
+      </div>
+    </div>
+    <div id="revMonthPeriod" style="display:none">
+      <div class="period-row">
+        <select class="form-control" id="revViewMonth" onchange="loadRevMonth()"></select>
+        <select class="form-control" id="revViewYear"  onchange="loadRevMonth()"></select>
+      </div>
+    </div>
+    <div id="revViewList"></div>
+  </div>
+  <div class="bottom-actions">
+    <button class="btn btn-secondary" onclick="closeRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#8592; Quay về</button>
   </div>
 </div>
 
@@ -489,7 +546,7 @@ var revCostId    = 0;
 function api(params, cb) {
   // Kiem tra URL da duoc dien chua
   if (!API_URL || API_URL.indexOf('YOUR_APPS_SCRIPT') !== -1) {
-    cb(new Error('API_URL chua duoc dien. Mo app.html va thay YOUR_APPS_SCRIPT_URL_HERE bang URL that.'), null);
+    cb(new Error('Chua dien API_URL. Vui long mo file app.html va thay YOUR_APPS_SCRIPT_URL_HERE bang URL thuc tu Apps Script.'), null);
     return;
   }
   var url = API_URL + '?';
@@ -525,39 +582,36 @@ function api(params, cb) {
 window.addEventListener('DOMContentLoaded', function() {
   var saved     = localStorage.getItem('loggedUser');
   var savedPass = localStorage.getItem('loggedPass');
+  canReport = localStorage.getItem('canReport') === '1';
+
+  // Nếu API_URL chưa điền → show login ngay, không gọi API
+  var apiReady = API_URL && API_URL.indexOf('YOUR_APPS_SCRIPT') === -1;
 
   if (saved === '__admin__' && savedPass === ADMIN_PASSWORD) {
-    showScreen('adminScreen');
-    initAdminScreen(null);
-
-  } else if (saved && saved !== '__admin__' && savedPass) {
-
-    // Verify lai voi server phong truong hop bi khoa sau khi da login
-    showScreen('mainScreen'); // hien truoc tranh man hinh trang
-
+    if (apiReady) {
+      showScreen('adminScreen');
+      initAdminScreen(null);
+    } else {
+      showScreen('loginScreen');
+      loadStaffList(null);
+    }
+  } else if (apiReady && saved && saved !== '__admin__' && savedPass) {
+    showScreen('mainScreen');
     api({ action: 'verifyLogin', staff: saved, pass: savedPass }, function(err, result) {
-
       if (err || !result || !result.success) {
-        // Bi khoa hoac sai pass -> dang xuat
         localStorage.removeItem('loggedUser');
         localStorage.removeItem('loggedPass');
+        localStorage.removeItem('canReport');
         showScreen('loginScreen');
         loadStaffList(null);
         if (result && result.error) showLoginError(result.error);
         return;
       }
-
       currentUser = saved;
-
-      // ✅ QUAN TRỌNG NHẤT (BẠN ĐANG THIẾU)
-      canReport = result.canReport === true;
-
-      // ✅ DEBUG (nên thêm để kiểm tra)
-      console.log("Auto login canReport =", canReport);
-
+      canReport   = result.canReport === true;
+      localStorage.setItem('canReport', canReport ? '1' : '0');
       initMainScreen(null);
     });
-
   } else {
     showScreen('loginScreen');
     loadStaffList(null);
@@ -637,14 +691,14 @@ function doLogin() {
       showLoginError(msg);
       return;
     }
-
-  // ✅ BẮT BUỘC PHẢI CÓ
-  canReport = result.canReport === true;
-	
     // Login thanh cong
     currentUser = staff;
-    localStorage.setItem('loggedUser', staff);
-    localStorage.setItem('loggedPass', pass);
+    canReport   = result.canReport === true;
+    localStorage.setItem('loggedUser',  staff);
+    localStorage.setItem('loggedPass',  pass);
+    localStorage.setItem('canReport',   canReport ? '1' : '0');
+    // Debug: hiện toast để xác nhận canReport
+    showToast('Xin chao ' + staff + (canReport ? ' | Co quyen bao cao' : ''), 'success');
     showScreen('mainScreen');
     initMainScreen(null);
   });
@@ -688,21 +742,6 @@ function initMainScreen(done) {
     if (!err && res && res.success) services = res.data;
     checkDone();
   });
-}
-
-function switchTab(tab) {
-  var tuaScreen = document.getElementById('mainScreen');
-  var revenueScreen = document.getElementById('revenueScreen');
-
-  if (tab === 'mainScreen') {
-    if (tuaScreen) tuaScreen.style.display = '';
-    if (revenueScreen) revenueScreen.style.display = 'none';
-  } else {
-    if (tuaScreen) tuaScreen.style.display = 'none';
-    if (revenueScreen) revenueScreen.style.display = '';
-  }
-
-  console.log("Switched to:", tab); // debug
 }
 
 // ── DATE ────────────────────────────────────────────────────
@@ -1394,47 +1433,281 @@ function reloadView() {
 
 function closeView() { showScreen('mainScreen'); }
 
-// ── LOGOUT ──────────────────────────────────────────────────
-function showLogout()  { document.getElementById('logoutModal').classList.add('show'); }
-function closeLogout() { document.getElementById('logoutModal').classList.remove('show'); }
-function doLogout() {
-  localStorage.removeItem('loggedUser');
-  localStorage.removeItem('loggedPass');
-  localStorage.removeItem('canReport');
-  canReport = false;
-  currentUser = null; customers = []; services = [];
-  closeLogout();
-  document.getElementById('passwordInput').value = '';
-  loadStaffList(function() { showScreen('loginScreen'); });
-}
 
-// ── CLOSE DROPDOWNS ─────────────────────────────────────────
-function closeAllDropdowns() {
-  var drops = document.querySelectorAll('.dropdown');
-  for (var i = 0; i < drops.length; i++) drops[i].classList.remove('open');
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.autocomplete-wrap') && !e.target.closest('.svc-ac'))
-    closeAllDropdowns();
-  if (e.target === document.getElementById('editModal')) closeEdit();
-  if (!e.target.closest('.edit-ac')) {
-    document.getElementById('editPhoneDrop').classList.remove('open');
-    document.getElementById('editSvcDrop').classList.remove('open');
+// ─── TAB SWITCH ─────────────────────────────────────────────
+function switchTab(tab) {
+  if (tab === 'revenue') {
+    var tTua = document.getElementById('tabTua');
+    var tRev = document.getElementById('tabRev');
+    if (tTua) tTua.className = 'tab-btn';
+    if (tRev) tRev.className = 'tab-btn active';
+    showScreen('revenueScreen');
+    initRevenueScreen();
+  } else {
+    var rTua = document.getElementById('revTabTua');
+    var rRev = document.getElementById('revTabRev');
+    if (rTua) rTua.className = 'tab-btn active';
+    if (rRev) rRev.className = 'tab-btn';
+    var tTua2 = document.getElementById('tabTua');
+    var tRev2 = document.getElementById('tabRev');
+    if (tTua2) tTua2.className = 'tab-btn active';
+    if (tRev2) tRev2.className = 'tab-btn';
+    showScreen('mainScreen');
   }
-});
-
-// ── LOADING / TOAST ─────────────────────────────────────────
-function showLoading(v, msg) {
-  document.getElementById('loading').classList[v ? 'add' : 'remove']('show');
-  if (msg) document.getElementById('loadingText').textContent = msg;
 }
-var toastTimer;
-function showToast(msg, type) {
-  clearTimeout(toastTimer);
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' ' + type : '');
-  toastTimer = setTimeout(function() { t.classList.remove('show'); }, 3500);
+
+// ─── REVENUE SCREEN ───────────────────────────────────────────
+var revCurDate = new Date();
+
+function initRevenueScreen() {
+  revCurDate = new Date();
+  setRevDate(revCurDate);
+  resetRevForm();
+  loadRevenue(fmtDate(revCurDate));
+}
+
+function setRevDate(d) {
+  revCurDate = d;
+  var dd = pad(d.getDate()), mm = pad(d.getMonth()+1), yyyy = d.getFullYear();
+  document.getElementById('revDateDisplay').textContent = dd+'/'+mm+'/'+yyyy;
+  document.getElementById('revDatePicker').value = yyyy+'-'+mm+'-'+dd;
+}
+
+function revChangeDate(delta) {
+  revCurDate.setDate(revCurDate.getDate() + delta);
+  setRevDate(revCurDate);
+  resetRevForm();
+  loadRevenue(fmtDate(revCurDate));
+}
+
+function onRevDatePick(val) {
+  if (!val) return;
+  var p = val.split('-');
+  revCurDate = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]));
+  setRevDate(revCurDate);
+  resetRevForm();
+  loadRevenue(fmtDate(revCurDate));
+}
+
+function getRevDateStr() {
+  return document.getElementById('revDateDisplay').textContent;
+}
+
+function resetRevForm() {
+  document.getElementById('revTienMat').value  = '';
+  document.getElementById('revChuyenKH').value = '';
+  document.getElementById('revTipCK').value    = '';
+  document.getElementById('costRows').innerHTML = '';
+  revCostId = 0;
+  calcRev();
+}
+
+function loadRevenue(date) {
+  showLoading(true, 'Dang tai...');
+  api({ action: 'getRevenue', staff: currentUser, date: date }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success || !result.data) return;
+    var d = result.data;
+    document.getElementById('revTienMat').value  = d.tienMat  ? fmtRevNum(d.tienMat)  : '';
+    document.getElementById('revChuyenKH').value = d.chuyenKH ? fmtRevNum(d.chuyenKH) : '';
+    document.getElementById('revTipCK').value    = d.tipCK    ? fmtRevNum(d.tipCK)    : '';
+    document.getElementById('costRows').innerHTML = '';
+    revCostId = 0;
+    if (d.costs && d.costs.length) {
+      for (var i = 0; i < d.costs.length; i++) {
+        addCostRow(d.costs[i].name, d.costs[i].amount ? fmtRevNum(d.costs[i].amount) : '');
+      }
+    }
+    calcRev();
+  });
+}
+
+function fmtRevNum(n) {
+  return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
+}
+
+function parseRevNum(s) {
+  if (!s) return 0;
+  return parseFloat(s.toString().replace(/[.]/g, '').replace(/,/g, '.')) || 0;
+}
+
+function formatRevInput(input) {
+  var raw = input.value.replace(/[^0-9]/g, '');
+  if (!raw) { input.value = ''; calcRev(); return; }
+  input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10));
+  calcRev();
+}
+
+function calcRev() {
+  var tm  = parseRevNum(document.getElementById('revTienMat').value);
+  var ck  = parseRevNum(document.getElementById('revChuyenKH').value);
+  var tip = parseRevNum(document.getElementById('revTipCK').value);
+  var totalCost = 0;
+  var rows = document.querySelectorAll('.cost-row');
+  for (var i = 0; i < rows.length; i++) {
+    totalCost += parseRevNum(rows[i].querySelector('.cost-amt').value);
+  }
+  var tongDT = tm + ck;
+  var giuTM  = tm - tip - totalCost;
+  var giuCK  = ck + tip;
+  document.getElementById('revTotal').textContent      = fmtRevNum(tongDT);
+  document.getElementById('revGiuTMBanner').textContent= fmtRevNum(giuTM);
+  document.getElementById('revGiuCKBanner').textContent= fmtRevNum(giuCK);
+  document.getElementById('revGiuTM').value = fmtRevNum(giuTM);
+  document.getElementById('revGiuCK').value = fmtRevNum(giuCK);
+}
+
+function addCostRow(name, amount) {
+  revCostId++;
+  var id = revCostId;
+  var container = document.getElementById('costRows');
+  var row = document.createElement('div');
+  row.className = 'cost-row';
+  row.setAttribute('data-cid', id);
+  var nv = (name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  row.innerHTML =
+    '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRev()">' +
+    '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="formatRevInput(this)">' +
+    '<div class="cost-rm" onclick="removeCostRow('+id+')">&#215;</div>';
+  container.appendChild(row);
+  calcRev();
+}
+
+function removeCostRow(id) {
+  var row = document.querySelector('[data-cid="'+id+'"]');
+  if (row) { row.parentNode.removeChild(row); calcRev(); }
+}
+
+function saveRevenue() {
+  var date     = getRevDateStr();
+  var tienMat  = parseRevNum(document.getElementById('revTienMat').value);
+  var chuyenKH = parseRevNum(document.getElementById('revChuyenKH').value);
+  var tipCK    = parseRevNum(document.getElementById('revTipCK').value);
+  var tongDT   = tienMat + chuyenKH;
+  var totalCost = 0;
+  var costs = [];
+  var rows = document.querySelectorAll('.cost-row');
+  for (var i = 0; i < rows.length; i++) {
+    var n = rows[i].querySelector('.cost-name').value.trim();
+    var a = parseRevNum(rows[i].querySelector('.cost-amt').value);
+    if (n || a) { costs.push({name:n, amount:a}); totalCost += a; }
+  }
+  var giuTM = tienMat - tipCK - totalCost;
+  var giuCK = chuyenKH + tipCK;
+  showLoading(true, 'Dang luu...');
+  api({
+    action:'saveRevenue', staff:currentUser, date:date,
+    tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
+    tongGiuTM:giuTM, tongGiuCK:giuCK,
+    costs:JSON.stringify(costs)
+  }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success)
+      return showToast('Loi luu: '+(result?result.error:(err?err.message:'Unknown')), 'error');
+    showToast('Da luu bao cao!', 'success');
+    resetRevForm();
+  });
+}
+
+// ─── REV VIEW ────────────────────────────────────────────────
+var revViewDate = new Date();
+var revViewMode = 'day';
+
+function openRevView() {
+  showScreen('revViewScreen');
+  revViewDate = new Date(revCurDate.getTime());
+  initMonthYearSelects('revViewMonth','revViewYear');
+  setRevViewMode('day');
+}
+
+function closeRevView() { showScreen('revenueScreen'); }
+
+function setRevViewMode(mode) {
+  revViewMode = mode;
+  document.getElementById('revModeDayBtn').className   = 'mode-btn'+(mode==='day'  ?' active':'');
+  document.getElementById('revModeMonthBtn').className = 'mode-btn'+(mode==='month'?' active':'');
+  document.getElementById('revDayPeriod').style.display   = mode==='day'  ?'':'none';
+  document.getElementById('revMonthPeriod').style.display = mode==='month'?'':'none';
+  if (mode==='day') {
+    var dd=pad(revViewDate.getDate()),mm=pad(revViewDate.getMonth()+1),yyyy=revViewDate.getFullYear();
+    document.getElementById('revViewDateInput').value = dd+'/'+mm+'/'+yyyy;
+    document.getElementById('revViewSubtitle').textContent = currentUser+' — '+dd+'/'+mm+'/'+yyyy;
+    loadRevViewDay(dd+'/'+mm+'/'+yyyy);
+  } else {
+    loadRevMonth();
+  }
+}
+
+function revViewChangeDate(delta) {
+  revViewDate.setDate(revViewDate.getDate()+delta);
+  var dd=pad(revViewDate.getDate()),mm=pad(revViewDate.getMonth()+1),yyyy=revViewDate.getFullYear();
+  document.getElementById('revViewDateInput').value = dd+'/'+mm+'/'+yyyy;
+  document.getElementById('revViewSubtitle').textContent = currentUser+' — '+dd+'/'+mm+'/'+yyyy;
+  loadRevViewDay(dd+'/'+mm+'/'+yyyy);
+}
+
+function loadRevViewDay(date) {
+  showLoading(true,'Dang tai...');
+  api({action:'getRevenue',staff:currentUser,date:date},function(err,result){
+    showLoading(false);
+    var list=document.getElementById('revViewList');
+    if(err||!result||!result.success||!result.data){
+      list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>Chua co bao cao ngay nay</p></div>';
+      return;
+    }
+    list.innerHTML=renderRevCard(result.data);
+  });
+}
+
+function loadRevMonth() {
+  var month=document.getElementById('revViewMonth').value;
+  var year =document.getElementById('revViewYear').value;
+  document.getElementById('revViewSubtitle').textContent=currentUser+' — Thang '+month+'/'+year;
+  showLoading(true,'Dang tai...');
+  api({action:'getRevenueByMonth',staff:currentUser,month:month,year:year},function(err,result){
+    showLoading(false);
+    var list=document.getElementById('revViewList');
+    if(err||!result||!result.success||!result.data||!result.data.length){
+      list.innerHTML='<div class="empty-state"><div class="emoji">📭</div><p>Chua co bao cao thang nay</p></div>';
+      return;
+    }
+    var html='';
+    for(var i=0;i<result.data.length;i++) html+=renderRevCard(result.data[i]);
+    list.innerHTML=html;
+  });
+}
+
+function renderRevCard(d) {
+  var costsHtml='';
+  if(d.costs&&d.costs.length){
+    costsHtml='<div class="rv-costs">';
+    for(var i=0;i<d.costs.length;i++){
+      costsHtml+='<div class="rv-cost-row"><span>'+escHtml(d.costs[i].name)+'</span><span>'+fmtRevNum(d.costs[i].amount)+'</span></div>';
+    }
+    costsHtml+='</div>';
+  }
+  return '<div class="rev-view-record">'+
+    '<div class="rev-view-date">'+escHtml(d.date)+'</div>'+
+    '<div class="rv-grid">'+
+      '<div class="rv-item"><div class="rv-item-lbl">Tong DT</div><div class="rv-item-val" style="color:var(--accent)">'+fmtRevNum(d.tongDT)+'</div></div>'+
+      '<div class="rv-item"><div class="rv-item-lbl">Tien mat</div><div class="rv-item-val">'+fmtRevNum(d.tienMat)+'</div></div>'+
+      '<div class="rv-item"><div class="rv-item-lbl">Chuyen khoan</div><div class="rv-item-val">'+fmtRevNum(d.chuyenKH)+'</div></div>'+
+      '<div class="rv-item"><div class="rv-item-lbl">Tip CK</div><div class="rv-item-val">'+fmtRevNum(d.tipCK)+'</div></div>'+
+      '<div class="rv-item"><div class="rv-item-lbl">Giu TM</div><div class="rv-item-val" style="color:var(--success)">'+fmtRevNum(d.tongGiuTM)+'</div></div>'+
+      '<div class="rv-item"><div class="rv-item-lbl">Giu CK</div><div class="rv-item-val" style="color:var(--accent2)">'+fmtRevNum(d.tongGiuCK)+'</div></div>'+
+    '</div>'+costsHtml+'</div>';
+}
+
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){ return escHtml(s); }
+function fmtDate(d){
+  var dd = pad(d.getDate()), mm = pad(d.getMonth() + 1);
+  return dd + '/' + mm + '/' + d.getFullYear();
+}
+function fmtK(n){
+  if(n==null || isNaN(n)) return '0K';
+  return (Math.round(n)/1000).toFixed(0) + 'K';
 }
 </script>
 </body>
