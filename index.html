@@ -1367,6 +1367,171 @@ function reloadView() {
 
 function closeView() { showScreen('mainScreen'); }
 
+
+// ─── TAB SWITCH ────────────────────────────────────────────
+function switchTab(tab) {
+  if (tab === 'revenue') {
+    var tTua = document.getElementById('tabTua');
+    var tRev = document.getElementById('tabRev');
+    if (tTua) tTua.className = 'tab-btn';
+    if (tRev) tRev.className = 'tab-btn active';
+    showScreen('revenueScreen');
+    initRevenueScreen();
+  } else {
+    var rTua = document.getElementById('revTabTua');
+    var rRev = document.getElementById('revTabRev');
+    if (rTua) rTua.className = 'tab-btn active';
+    if (rRev) rRev.className = 'tab-btn';
+    var tTua2 = document.getElementById('tabTua');
+    var tRev2 = document.getElementById('tabRev');
+    if (tTua2) tTua2.className = 'tab-btn active';
+    if (tRev2) tRev2.className = 'tab-btn';
+    showScreen('mainScreen');
+  }
+}
+
+// ─── REVENUE SCREEN ────────────────────────────────────────
+var revCostId = 0;
+
+function initRevenueScreen() {
+  var d    = new Date();
+  var dd   = pad(d.getDate());
+  var mm   = pad(d.getMonth() + 1);
+  var yyyy = d.getFullYear();
+  document.getElementById('revDateDisplay').textContent = dd + '/' + mm + '/' + yyyy;
+  document.getElementById('revDatePicker').value = yyyy + '-' + mm + '-' + dd;
+  document.getElementById('revTienMat').value  = '';
+  document.getElementById('revChuyenKH').value = '';
+  document.getElementById('revTipCK').value    = '';
+  document.getElementById('costRows').innerHTML = '';
+  revCostId = 0;
+  calcRev();
+  loadRevenue(dd + '/' + mm + '/' + yyyy);
+}
+
+function onRevDatePick(val) {
+  if (!val) return;
+  var p = val.split('-');
+  var dateStr = p[2] + '/' + p[1] + '/' + p[0];
+  document.getElementById('revDateDisplay').textContent = dateStr;
+  document.getElementById('revTienMat').value  = '';
+  document.getElementById('revChuyenKH').value = '';
+  document.getElementById('revTipCK').value    = '';
+  document.getElementById('costRows').innerHTML = '';
+  revCostId = 0;
+  calcRev();
+  loadRevenue(dateStr);
+}
+
+function getRevDateStr() {
+  return document.getElementById('revDateDisplay').textContent;
+}
+
+function loadRevenue(date) {
+  showLoading(true, 'Dang tai bao cao...');
+  api({ action: 'getRevenue', staff: currentUser, date: date }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success || !result.data) return;
+    var d = result.data;
+    document.getElementById('revTienMat').value  = d.tienMat  ? fmtRevNum(d.tienMat)  : '';
+    document.getElementById('revChuyenKH').value = d.chuyenKH ? fmtRevNum(d.chuyenKH) : '';
+    document.getElementById('revTipCK').value    = d.tipCK    ? fmtRevNum(d.tipCK)    : '';
+    document.getElementById('costRows').innerHTML = '';
+    revCostId = 0;
+    if (d.costs && d.costs.length) {
+      for (var i = 0; i < d.costs.length; i++) {
+        addCostRow(d.costs[i].name, d.costs[i].amount ? fmtRevNum(d.costs[i].amount) : '');
+      }
+    }
+    calcRev();
+  });
+}
+
+function fmtRevNum(n) {
+  return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
+}
+
+function parseRevNum(s) {
+  if (!s) return 0;
+  return parseFloat(s.toString().replace(/[.]/g, '').replace(/,/g, '.')) || 0;
+}
+
+function formatRevInput(input) {
+  var raw = input.value.replace(/[^0-9]/g, '');
+  if (!raw) { input.value = ''; calcRev(); return; }
+  input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10));
+  calcRev();
+}
+
+function calcRev() {
+  var tm  = parseRevNum(document.getElementById('revTienMat').value);
+  var ck  = parseRevNum(document.getElementById('revChuyenKH').value);
+  var tip = parseRevNum(document.getElementById('revTipCK').value);
+  var totalCost = 0;
+  var rows = document.querySelectorAll('.cost-row');
+  for (var i = 0; i < rows.length; i++) {
+    totalCost += parseRevNum(rows[i].querySelector('.cost-amt').value);
+  }
+  var tongDT = tm + ck;
+  var giuTM  = tm - tip - totalCost;
+  var giuCK  = ck + tip;
+  document.getElementById('revTotal').value  = fmtRevNum(tongDT);
+  document.getElementById('revGiuTM').value  = fmtRevNum(giuTM);
+  document.getElementById('revGiuCK').value  = fmtRevNum(giuCK);
+}
+
+function addCostRow(name, amount) {
+  revCostId++;
+  var id = revCostId;
+  var container = document.getElementById('costRows');
+  var row = document.createElement('div');
+  row.className = 'cost-row';
+  row.setAttribute('data-cid', id);
+  var nameVal   = (name   || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  var amountVal = amount || '';
+  row.innerHTML =
+    '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="' + nameVal + '" oninput="calcRev()">' +
+    '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="' + amountVal + '" oninput="formatRevInput(this)">' +
+    '<div class="cost-rm" onclick="removeCostRow(' + id + ')">&#215;</div>';
+  container.appendChild(row);
+  calcRev();
+}
+
+function removeCostRow(id) {
+  var row = document.querySelector('[data-cid="' + id + '"]');
+  if (row) { row.parentNode.removeChild(row); calcRev(); }
+}
+
+function saveRevenue() {
+  var date     = getRevDateStr();
+  var tienMat  = parseRevNum(document.getElementById('revTienMat').value);
+  var chuyenKH = parseRevNum(document.getElementById('revChuyenKH').value);
+  var tipCK    = parseRevNum(document.getElementById('revTipCK').value);
+  var tongDT   = tienMat + chuyenKH;
+  var totalCost = 0;
+  var costs = [];
+  var rows = document.querySelectorAll('.cost-row');
+  for (var i = 0; i < rows.length; i++) {
+    var n = rows[i].querySelector('.cost-name').value.trim();
+    var a = parseRevNum(rows[i].querySelector('.cost-amt').value);
+    if (n || a) { costs.push({ name: n, amount: a }); totalCost += a; }
+  }
+  var giuTM = tienMat - tipCK - totalCost;
+  var giuCK = chuyenKH + tipCK;
+  showLoading(true, 'Dang luu...');
+  api({
+    action: 'saveRevenue', staff: currentUser, date: date,
+    tongDT: tongDT, tienMat: tienMat, chuyenKH: chuyenKH, tipCK: tipCK,
+    tongGiuTM: giuTM, tongGiuCK: giuCK,
+    costs: JSON.stringify(costs)
+  }, function(err, result) {
+    showLoading(false);
+    if (err || !result || !result.success)
+      return showToast('Loi luu: ' + (result ? result.error : (err ? err.message : 'Unknown')), 'error');
+    showToast('Da luu bao cao!', 'success');
+  });
+}
+
 // ── LOGOUT ──────────────────────────────────────────────────
 function showLogout()  { document.getElementById('logoutModal').classList.add('show'); }
 function closeLogout() { document.getElementById('logoutModal').classList.remove('show'); }
