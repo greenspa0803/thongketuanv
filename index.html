@@ -416,12 +416,12 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       <div class="rev-banner-unit">đồng</div>
       <div class="rev-banner-row">
         <div class="rev-banner-item">
-          <div class="rev-banner-item-lbl">Giữ tiền mặt</div>
+          <div class="rev-banner-item-lbl">Tổng giữ TM</div>
           <div class="rev-banner-item-val" id="revGiuTMBanner" style="color:var(--success)">0</div>
         </div>
         <div style="width:1px;background:#3a4a8a"></div>
         <div class="rev-banner-item">
-          <div class="rev-banner-item-lbl">Giữ chuyển khoản</div>
+          <div class="rev-banner-item-lbl">Tổng giữ CK</div>
           <div class="rev-banner-item-val" id="revGiuCKBanner" style="color:var(--accent2)">0</div>
         </div>
       </div>
@@ -460,11 +460,11 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       <div class="rev-card-hdr"><span class="rev-card-icon">🏦</span><span class="rev-card-title">Tổng giữ lại</span></div>
       <div class="rev-card-body">
         <div class="rev-field">
-          <div class="rev-field-label">Giữ tiền mặt<small>TM − Tip − Chi phí</small></div>
+          <div class="rev-field-label">Tổng giữ TM<small>TM trước + TM − Tip − Chi phí</small></div>
           <input type="text" class="rev-input readonly-ok" id="revGiuTM" readonly placeholder="0">
         </div>
         <div class="rev-field">
-          <div class="rev-field-label">Giữ chuyển khoản<small>CK + Tip</small></div>
+          <div class="rev-field-label">Tổng giữ CK<small>CK trước + CK + Tip</small></div>
           <input type="text" class="rev-input readonly-ck" id="revGiuCK" readonly placeholder="0">
         </div>
       </div>
@@ -1580,9 +1580,11 @@ function switchTab(tab) {
 }
 
 // ─── REVENUE SCREEN ───────────────────────────────────────────
-var revCostId  = 0;
-var revCurDate = new Date();
+var revCostId   = 0;
+var revCurDate  = new Date();
 var revExistsMode = false; // true = ngày đã có báo cáo
+var revPrevGiuTM  = 0;    // Tổng giữ TM ngày hôm trước
+var revPrevGiuCK  = 0;    // Tổng giữ CK ngày hôm trước
 
 function initRevenueScreen() {
   revCurDate = new Date();
@@ -1624,6 +1626,44 @@ function resetRevForm() {
   calcRev();
 }
 
+function setRevFormLocked(locked) {
+  // Lock/unlock tất cả input trong form doanh thu
+  var ids = ['revTienMat','revChuyenKH','revTipCK'];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (locked) {
+      el.setAttribute('readonly', 'readonly');
+      el.style.opacity = '0.7';
+      el.style.cursor  = 'default';
+    } else {
+      el.removeAttribute('readonly');
+      el.style.opacity = '';
+      el.style.cursor  = '';
+    }
+  });
+  // Lock/unlock các cost-row inputs
+  var costInputs = document.querySelectorAll('#costRows input');
+  costInputs.forEach(function(el) {
+    if (locked) {
+      el.setAttribute('readonly','readonly');
+      el.style.opacity = '0.7';
+      el.style.cursor  = 'default';
+    } else {
+      el.removeAttribute('readonly');
+      el.style.opacity = '';
+      el.style.cursor  = '';
+    }
+  });
+  // Ẩn/hiện nút Thêm chi phí
+  var addCostBtn = document.querySelector('#costRows ~ .add-cost-btn');
+  if (addCostBtn) addCostBtn.style.display = locked ? 'none' : '';
+  // Ẩn/hiện nút xóa chi phí (cost-rm)
+  document.querySelectorAll('.cost-rm').forEach(function(el) {
+    el.style.display = locked ? 'none' : '';
+  });
+}
+
 function setRevExistsMode(exists, data) {
   revExistsMode = exists;
   var notice = document.getElementById('revExistsNotice');
@@ -1633,9 +1673,11 @@ function setRevExistsMode(exists, data) {
     notice.style.display = '';
     savBtn.style.display = 'none';
     if (data) fillRevForm(data);
+    setRevFormLocked(true);
   } else {
     notice.style.display = 'none';
     savBtn.style.display = '';
+    setRevFormLocked(false);
     resetRevForm();
   }
 }
@@ -1658,6 +1700,9 @@ function loadRevenue(date) {
   api({ action: 'getRevenue', staff: currentUser, date: date }, function(err, result) {
     showLoading(false);
     if (err || !result || !result.success) return;
+    // Lưu giữ ngày hôm trước để tính cộng dồn
+    revPrevGiuTM = parseFloat(result.prevGiuTM) || 0;
+    revPrevGiuCK = parseFloat(result.prevGiuCK) || 0;
     if (result.data) {
       setRevExistsMode(true, result.data);
     } else {
@@ -1685,12 +1730,15 @@ function calcRev() {
   var ck  = parseRevNum(document.getElementById('revChuyenKH').value);
   var tip = parseRevNum(document.getElementById('revTipCK').value);
   var totalCost = 0;
-  var rows = document.querySelectorAll('.cost-row');
+  var rows = document.querySelectorAll('#costRows .cost-row');
   for (var i = 0; i < rows.length; i++)
     totalCost += parseRevNum(rows[i].querySelector('.cost-amt').value);
   var tongDT = tm + ck;
-  var giuTM  = tm - tip - totalCost;
-  var giuCK  = ck + tip;
+  // Công thức cộng dồn:
+  // Tổng giữ TM = giữ TM hôm trước + TM hôm nay - tip CK - chi phí
+  // Tổng giữ CK = giữ CK hôm trước + CK hôm nay + tip CK
+  var giuTM = revPrevGiuTM + tm - tip - totalCost;
+  var giuCK = revPrevGiuCK + ck + tip;
   document.getElementById('revTotal').textContent       = fmtRevNum(tongDT);
   document.getElementById('revGiuTMBanner').textContent = fmtRevNum(giuTM);
   document.getElementById('revGiuCKBanner').textContent = fmtRevNum(giuCK);
@@ -1727,14 +1775,15 @@ function getRevPayload() {
   var tongDT   = tienMat + chuyenKH;
   var totalCost = 0;
   var costs = [];
-  var rows = document.querySelectorAll('.cost-row');
+  var rows = document.querySelectorAll('#costRows .cost-row');
   for (var i = 0; i < rows.length; i++) {
     var n = rows[i].querySelector('.cost-name').value.trim();
     var a = parseRevNum(rows[i].querySelector('.cost-amt').value);
     if (n || a) { costs.push({name:n,amount:a}); totalCost += a; }
   }
-  var giuTM = tienMat - tipCK - totalCost;
-  var giuCK = chuyenKH + tipCK;
+  // Công thức cộng dồn
+  var giuTM = revPrevGiuTM + tienMat - tipCK - totalCost;
+  var giuCK = revPrevGiuCK + chuyenKH + tipCK;
   return { date:date, tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
            tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs) };
 }
@@ -1803,8 +1852,9 @@ function calcRevEdit() {
   var rows = document.querySelectorAll('#revEditCostRows .cost-row');
   for (var i = 0; i < rows.length; i++)
     totalCost += parseRevNum(rows[i].querySelector('.cost-amt').value);
-  var giuTM = tm - tip - totalCost;
-  var giuCK = ck + tip;
+  // Công thức cộng dồn (dùng biến global revPrevGiuTM/CK)
+  var giuTM = revPrevGiuTM + tm - tip - totalCost;
+  var giuCK = revPrevGiuCK + ck + tip;
   document.getElementById('revEditGiuTM').value = fmtRevNum(giuTM);
   document.getElementById('revEditGiuCK').value = fmtRevNum(giuCK);
 }
@@ -1823,8 +1873,9 @@ function doUpdateRevenue() {
     var a = parseRevNum(rows[i].querySelector('.cost-amt').value);
     if (n || a) { costs.push({name:n,amount:a}); totalCost += a; }
   }
-  var giuTM = tienMat - tipCK - totalCost;
-  var giuCK = chuyenKH + tipCK;
+  // Công thức cộng dồn
+  var giuTM = revPrevGiuTM + tienMat - tipCK - totalCost;
+  var giuCK = revPrevGiuCK + chuyenKH + tipCK;
   showLoading(true,'Dang cap nhat...');
   api({
     action:'updateRevenue', staff:currentUser, date:date,
@@ -1836,8 +1887,21 @@ function doUpdateRevenue() {
       return showToast('Loi cap nhat: '+(result?result.error:(err?err.message:'Unknown')),'error');
     showToast('Da cap nhat bao cao!','success');
     closeRevEdit();
-    // Reload data mới vào form
-    loadRevenue(date);
+    // Tính lại giuTM/giuCK theo công thức cộng dồn rồi fill vào form
+    var d = {
+      tienMat:   tienMat,
+      chuyenKH:  chuyenKH,
+      tipCK:     tipCK,
+      costs:     costs,
+      tongGiuTM: giuTM,
+      tongGiuCK: giuCK
+    };
+    fillRevForm(d);
+    setRevFormLocked(true);
+    // Cập nhật banner
+    document.getElementById('revTotal').textContent       = fmtRevNum(tongDT);
+    document.getElementById('revGiuTMBanner').textContent = fmtRevNum(giuTM);
+    document.getElementById('revGiuCKBanner').textContent = fmtRevNum(giuCK);
     // Nếu đang ở revView thì reload list
     if (document.getElementById('revViewScreen') &&
         document.getElementById('revViewScreen').classList.contains('active')) {
