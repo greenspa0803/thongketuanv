@@ -426,7 +426,6 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
           <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
             <div style="-webkit-flex:1;flex:1;min-width:80px">
               <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
-              <div id="revTienMat_preview" style="font-size:11px;color:var(--muted);margin-top:3px;text-align:right;min-height:14px"></div>
             </div>
             <input type="text" class="rev-input-note" id="revNoteTM" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
           </div>
@@ -436,7 +435,6 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
           <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
             <div style="-webkit-flex:1;flex:1;min-width:80px">
               <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
-              <div id="revChuyenKH_preview" style="font-size:11px;color:var(--muted);margin-top:3px;text-align:right;min-height:14px"></div>
             </div>
             <input type="text" class="rev-input-note" id="revNoteCK" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
           </div>
@@ -445,7 +443,6 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
           <div class="rev-field-label">Tiền tip CK<small>Trừ vào tiền mặt giữ</small></div>
           <div style="-webkit-flex:1;flex:1">
             <input type="text" inputmode="numeric" class="rev-input" id="revTipCK" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
-            <div id="revTipCK_preview" style="font-size:11px;color:var(--muted);margin-top:3px;text-align:right;min-height:14px"></div>
           </div>
         </div>
       </div>
@@ -1829,13 +1826,9 @@ function addCostRow(name, amount) {
   row.className = 'cost-row';
   row.setAttribute('data-cid', id);
   var nv = (name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  var previewId = 'cost_prev_' + id;
   row.innerHTML =
     '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRev()">' +
-    '<div style="display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;width:90px;-webkit-flex-shrink:0;flex-shrink:0">'+
-      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="formatRevInput(this);updateCostPreview(this,\'' + previewId + '\')">'+
-      '<div id="'+previewId+'" style="font-size:10px;color:var(--muted);text-align:right;min-height:13px;margin-top:2px"></div>'+
-    '</div>'+
+    '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="formatRevInput(this)">' +
     '<div class="cost-rm" onclick="removeCostRow('+id+')">&#215;</div>';
   container.appendChild(row);
   calcRev();
@@ -1924,13 +1917,9 @@ function addRevEditCostRow(name, amount) {
   row.className = 'cost-row';
   row.setAttribute('data-ecid', id);
   var nv = (name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  var eprevId = 'ecost_prev_' + id;
   row.innerHTML =
     '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRevEdit()">' +
-    '<div style="display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;width:90px;-webkit-flex-shrink:0;flex-shrink:0">'+
-      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="fmtRevEditInput(this);updateCostPreview(this,\'' + eprevId + '\')">'+
-      '<div id="'+eprevId+'" style="font-size:10px;color:var(--muted);text-align:right;min-height:13px;margin-top:2px"></div>'+
-    '</div>'+
+    '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="fmtRevEditInput(this)">' +
     '<div class="cost-rm" onclick="rmRevEditCostRow('+id+')">&#215;</div>';
   container.appendChild(row);
   calcRevEdit();
@@ -1946,13 +1935,7 @@ function fmtRevEditInput(input) {
   calcRevEdit();
 }
 
-function updateCostPreview(input, previewId) {
-  var prev = document.getElementById(previewId);
-  if (!prev) return;
-  var raw = input.value.replace(/[^0-9]/g, '');
-  if (!raw) { prev.textContent = ''; return; }
-  prev.textContent = '= ' + new Intl.NumberFormat('vi-VN').format(parseInt(raw,10) * 1000) + 'đ';
-}
+
 function calcRevEdit() {
   var tm  = parseRevNum(document.getElementById('revEditTienMat').value);
   var ck  = parseRevNum(document.getElementById('revEditChuyenKH').value);
