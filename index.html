@@ -10,7 +10,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Quản lý dịch vụ</title>
-<!-- APP VERSION: 2.5 | BUILD: 20260402-0413 -->
+<!-- APP VERSION: 2.5 | BUILD: 20260402-0417 -->
 
 <style>
 :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;--accent:#6c8eff;--accent2:#a78bfa;--success:#34d399;--danger:#f87171;--warn:#fbbf24;--text:#e8eaf6;--muted:#7b82a8;--r:14px;--rs:8px}
@@ -212,6 +212,10 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 .rv-cost-row{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;font-size:13px;color:var(--muted);padding:3px 0}
 /* Rev view record edit button */
 .rev-view-record .btn{width:auto;display:inline-block}
+/* Note input trong thẻ doanh thu */
+.rev-input-note{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 12px;color:var(--muted);font-family:inherit;font-size:13px;outline:none;-webkit-appearance:none;appearance:none;width:100%}
+.rev-input-note:focus{border-color:var(--accent);color:var(--text)}
+.rev-input-note[readonly]{opacity:0.7;cursor:default}
 </style>
 </head>
 <body>
@@ -409,62 +413,61 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       <div class="spin-btn" onclick="revChangeDate(1)">&#8250;</div>
     </div>
 
-    <!-- Banner tổng -->
-    <div class="rev-banner">
-      <div class="rev-banner-lbl">Tổng doanh thu</div>
-      <div class="rev-banner-amt" id="revTotal">0</div>
-      <div class="rev-banner-unit">đồng</div>
-      <div class="rev-banner-row">
-        <div class="rev-banner-item">
-          <div class="rev-banner-item-lbl">Tổng giữ TM</div>
-          <div class="rev-banner-item-val" id="revGiuTMBanner" style="color:var(--success)">0</div>
-        </div>
-        <div style="width:1px;background:#3a4a8a"></div>
-        <div class="rev-banner-item">
-          <div class="rev-banner-item-lbl">Tổng giữ CK</div>
-          <div class="rev-banner-item-val" id="revGiuCKBanner" style="color:var(--accent2)">0</div>
-        </div>
-      </div>
-    </div>
-
     <!-- Card: Thu -->
     <div class="rev-card">
-      <div class="rev-card-hdr"><span class="rev-card-icon">💰</span><span class="rev-card-title">Doanh thu</span></div>
+      <div class="rev-card-hdr">
+        <span class="rev-card-icon">💰</span>
+        <span class="rev-card-title">Doanh thu</span>
+        <span id="revTotal" style="margin-left:auto;font-size:15px;font-weight:700;color:var(--accent)">0</span>
+      </div>
       <div class="rev-card-body">
         <div class="rev-field">
           <div class="rev-field-label">Tiền mặt</div>
-          <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)">
+          <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
+            <div style="-webkit-flex:1;flex:1;min-width:80px">
+              <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
+              <div id="revTienMat_preview" style="font-size:11px;color:var(--muted);margin-top:3px;text-align:right;min-height:14px"></div>
+            </div>
+            <input type="text" class="rev-input-note" id="revNoteTM" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
+          </div>
         </div>
         <div class="rev-field">
           <div class="rev-field-label">Chuyển khoản</div>
-          <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)">
+          <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
+            <div style="-webkit-flex:1;flex:1;min-width:80px">
+              <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
+              <div id="revChuyenKH_preview" style="font-size:11px;color:var(--muted);margin-top:3px;text-align:right;min-height:14px"></div>
+            </div>
+            <input type="text" class="rev-input-note" id="revNoteCK" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
+          </div>
         </div>
         <div class="rev-field">
           <div class="rev-field-label">Tiền tip CK<small>Trừ vào tiền mặt giữ</small></div>
-          <input type="text" inputmode="numeric" class="rev-input" id="revTipCK" placeholder="0" oninput="formatRevInput(this)">
+          <div style="-webkit-flex:1;flex:1">
+            <input type="text" inputmode="numeric" class="rev-input" id="revTipCK" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
+            <div id="revTipCK_preview" style="font-size:11px;color:var(--muted);margin-top:3px;text-align:right;min-height:14px"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Card: Chi phí -->
+    <!-- Card: Chi phí (không có header) -->
     <div class="rev-card">
-      <div class="rev-card-hdr"><span class="rev-card-icon">🧾</span><span class="rev-card-title">Chi phí</span></div>
       <div class="rev-card-body">
         <div class="cost-rows" id="costRows"></div>
         <button class="add-cost-btn" onclick="addCostRow()">＋ Thêm chi phí</button>
       </div>
     </div>
 
-    <!-- Card: Tổng giữ -->
+    <!-- Card: Tổng giữ (không có header, text in đậm) -->
     <div class="rev-card" style="border-color:var(--success)44">
-      <div class="rev-card-hdr"><span class="rev-card-icon">🏦</span><span class="rev-card-title">Tổng giữ lại</span></div>
       <div class="rev-card-body">
         <div class="rev-field">
-          <div class="rev-field-label">Tổng giữ TM<small>TM trước + TM − Tip − Chi phí</small></div>
+          <div class="rev-field-label" style="font-weight:700;color:var(--text)">Tổng giữ TM<small style="font-weight:400;color:var(--muted)">TM trước + TM − Tip − CP</small></div>
           <input type="text" class="rev-input readonly-ok" id="revGiuTM" readonly placeholder="0">
         </div>
         <div class="rev-field">
-          <div class="rev-field-label">Tổng giữ CK<small>CK trước + CK + Tip</small></div>
+          <div class="rev-field-label" style="font-weight:700;color:var(--text)">Tổng giữ CK<small style="font-weight:400;color:var(--muted)">CK trước + CK + Tip</small></div>
           <input type="text" class="rev-input readonly-ck" id="revGiuCK" readonly placeholder="0">
         </div>
       </div>
@@ -588,8 +591,10 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <h3>Sua bao cao <span id="revEditDate" style="color:var(--accent);font-size:13px"></span></h3>
     <div class="edit-lbl">Tien mat</div>
     <input type="text" inputmode="numeric" class="form-control" id="revEditTienMat" placeholder="0" oninput="fmtRevEditInput(this)">
+    <input type="text" class="form-control" id="revEditNoteTM" placeholder="Ghi chu TM..." style="margin-top:6px;font-size:13px;padding:9px 12px">
     <div class="edit-lbl">Chuyen khoan</div>
     <input type="text" inputmode="numeric" class="form-control" id="revEditChuyenKH" placeholder="0" oninput="fmtRevEditInput(this)">
+    <input type="text" class="form-control" id="revEditNoteCK" placeholder="Ghi chu CK..." style="margin-top:6px;font-size:13px;padding:9px 12px">
     <div class="edit-lbl">Tien tip CK</div>
     <input type="text" inputmode="numeric" class="form-control" id="revEditTipCK" placeholder="0" oninput="fmtRevEditInput(this)">
     <div class="edit-lbl">Chi phi</div>
@@ -977,7 +982,7 @@ function onOtInput(val) {
 
 // ── UTILS ───────────────────────────────────────────────────
 function fmtVND(n)  { return new Intl.NumberFormat('vi-VN').format(n); }
-function fmtK(n)    { return new Intl.NumberFormat('vi-VN').format(n) + 'K'; }
+function fmtK(n)    { return new Intl.NumberFormat('vi-VN').format((n||0) * 1000); }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1416,11 +1421,11 @@ function renderAdminRevenue(staff, month, year, data) {
   document.getElementById('adminSummary').innerHTML =
     '<div class="month-summary">'+
       '<div style="font-size:12px;color:#8899cc;margin-bottom:4px">'+esc(staff)+' — Doanh thu Thang '+month+'/'+year+'</div>'+
-      '<div class="ms-amount">'+fmtK(totalDT)+'</div>'+
+      '<div class="ms-amount">'+fmtRevNum(totalDT)+'</div>'+
       '<div style="font-size:12px;color:var(--muted)">nghin dong tong doanh thu</div>'+
       '<div class="ms-breakdown">'+
-        '<span>Tong giu TM: <b style="color:var(--success)">'+fmtK(totalGiuTM)+'</b></span>'+
-        '<span>Tong giu CK: <b style="color:var(--accent2)">'+fmtK(totalGiuCK)+'</b></span>'+
+        '<span>Tong giu TM: <b style="color:var(--success)">'+fmtRevNum(totalGiuTM)+'</b></span>'+
+        '<span>Tong giu CK: <b style="color:var(--accent2)">'+fmtRevNum(totalGiuCK)+'</b></span>'+
       '</div>'+
     '</div>';
   var html='';
@@ -1682,6 +1687,8 @@ function resetRevForm() {
   document.getElementById('revTienMat').value  = '';
   document.getElementById('revChuyenKH').value = '';
   document.getElementById('revTipCK').value    = '';
+  document.getElementById('revNoteTM').value   = '';
+  document.getElementById('revNoteCK').value   = '';
   document.getElementById('costRows').innerHTML = '';
   revCostId = 0;
   calcRev();
@@ -1689,7 +1696,7 @@ function resetRevForm() {
 
 function setRevFormLocked(locked) {
   // Lock/unlock tất cả input trong form doanh thu
-  var ids = ['revTienMat','revChuyenKH','revTipCK'];
+  var ids = ['revTienMat','revChuyenKH','revTipCK','revNoteTM','revNoteCK'];
   ids.forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -1744,14 +1751,17 @@ function setRevExistsMode(exists, data) {
 }
 
 function fillRevForm(d) {
-  document.getElementById('revTienMat').value  = d.tienMat  ? fmtRevNum(d.tienMat)  : '';
-  document.getElementById('revChuyenKH').value = d.chuyenKH ? fmtRevNum(d.chuyenKH) : '';
-  document.getElementById('revTipCK').value    = d.tipCK    ? fmtRevNum(d.tipCK)    : '';
+  // Ô nhập hiển thị số K gốc (vd: 150, không phải 150.000)
+  document.getElementById('revTienMat').value  = d.tienMat  ? fmtInputK(d.tienMat)  : '';
+  document.getElementById('revChuyenKH').value = d.chuyenKH ? fmtInputK(d.chuyenKH) : '';
+  document.getElementById('revTipCK').value    = d.tipCK    ? fmtInputK(d.tipCK)    : '';
+  document.getElementById('revNoteTM').value   = d.noteTM   || '';
+  document.getElementById('revNoteCK').value   = d.noteCK   || '';
   document.getElementById('costRows').innerHTML = '';
   revCostId = 0;
   if (d.costs && d.costs.length) {
     for (var i = 0; i < d.costs.length; i++)
-      addCostRow(d.costs[i].name, d.costs[i].amount ? fmtRevNum(d.costs[i].amount) : '');
+      addCostRow(d.costs[i].name, d.costs[i].amount ? fmtInputK(d.costs[i].amount) : '');
   }
   calcRev();
 }
@@ -1773,6 +1783,12 @@ function loadRevenue(date) {
 }
 
 function fmtRevNum(n) {
+  // n là số dạng K (150 = 150.000đ) → nhân ×1000 để hiển thị đầy đủ
+  return new Intl.NumberFormat('vi-VN').format(Math.round((n || 0) * 1000));
+}
+
+function fmtInputK(n) {
+  // Format số K cho ô nhập: 150 → "150", 1500 → "1.500" (không nhân ×1000)
   return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
 }
 function parseRevNum(s) {
@@ -1781,8 +1797,17 @@ function parseRevNum(s) {
 }
 function formatRevInput(input) {
   var raw = input.value.replace(/[^0-9]/g, '');
-  if (!raw) { input.value = ''; calcRev(); return; }
-  input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10));
+  if (!raw) {
+    input.value = '';
+    var prev = document.getElementById(input.id + '_preview');
+    if (prev) prev.textContent = '';
+    calcRev(); return;
+  }
+  var num = parseInt(raw, 10);
+  input.value = new Intl.NumberFormat('vi-VN').format(num);
+  // Hiện preview ×1000
+  var prev = document.getElementById(input.id + '_preview');
+  if (prev) prev.textContent = '= ' + new Intl.NumberFormat('vi-VN').format(num * 1000) + 'đ';
   calcRev();
 }
 
@@ -1800,9 +1825,7 @@ function calcRev() {
   // Tổng giữ CK = giữ CK hôm trước + CK hôm nay + tip CK
   var giuTM = revPrevGiuTM + tm - tip - totalCost;
   var giuCK = revPrevGiuCK + ck + tip;
-  document.getElementById('revTotal').textContent       = fmtRevNum(tongDT);
-  document.getElementById('revGiuTMBanner').textContent = fmtRevNum(giuTM);
-  document.getElementById('revGiuCKBanner').textContent = fmtRevNum(giuCK);
+  document.getElementById('revTotal').textContent = fmtRevNum(tongDT);
   document.getElementById('revGiuTM').value = fmtRevNum(giuTM);
   document.getElementById('revGiuCK').value = fmtRevNum(giuCK);
 }
@@ -1815,9 +1838,13 @@ function addCostRow(name, amount) {
   row.className = 'cost-row';
   row.setAttribute('data-cid', id);
   var nv = (name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  var previewId = 'cost_prev_' + id;
   row.innerHTML =
     '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRev()">' +
-    '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="formatRevInput(this)">' +
+    '<div style="display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;width:90px;-webkit-flex-shrink:0;flex-shrink:0">'+
+      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="formatRevInput(this);updateCostPreview(this,\'' + previewId + '\')">'+
+      '<div id="'+previewId+'" style="font-size:10px;color:var(--muted);text-align:right;min-height:13px;margin-top:2px"></div>'+
+    '</div>'+
     '<div class="cost-rm" onclick="removeCostRow('+id+')">&#215;</div>';
   container.appendChild(row);
   calcRev();
@@ -1833,6 +1860,8 @@ function getRevPayload() {
   var tienMat  = parseRevNum(document.getElementById('revTienMat').value);
   var chuyenKH = parseRevNum(document.getElementById('revChuyenKH').value);
   var tipCK    = parseRevNum(document.getElementById('revTipCK').value);
+  var noteTM   = document.getElementById('revNoteTM').value.trim();
+  var noteCK   = document.getElementById('revNoteCK').value.trim();
   var tongDT   = tienMat + chuyenKH;
   var totalCost = 0;
   var costs = [];
@@ -1846,6 +1875,7 @@ function getRevPayload() {
   var giuTM = revPrevGiuTM + tienMat - tipCK - totalCost;
   var giuCK = revPrevGiuCK + chuyenKH + tipCK;
   return { date:date, tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
+           noteTM:noteTM, noteCK:noteCK,
            tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs) };
 }
 
@@ -1856,6 +1886,14 @@ function saveRevenue() {
   if (!tm && !ck) {
     showToast('Vui long nhap it nhat Tien mat hoac Chuyen khoan!', 'error');
     return;
+  }
+  // Validate chi phí: tên có mà số tiền trống hoặc ngược lại
+  var costRows = document.querySelectorAll('#costRows .cost-row');
+  for (var ci = 0; ci < costRows.length; ci++) {
+    var cn = costRows[ci].querySelector('.cost-name').value.trim();
+    var ca = parseRevNum(costRows[ci].querySelector('.cost-amt').value);
+    if (cn && !ca) { showToast('Chi phi "' + cn + '": Chua nhap so tien!', 'error'); return; }
+    if (!cn && ca) { showToast('Chi phi so tien ' + ca + 'K: Chua nhap ten!', 'error'); return; }
   }
   var payload = getRevPayload();
   showLoading(true, 'Dang luu...');
@@ -1895,9 +1933,13 @@ function addRevEditCostRow(name, amount) {
   row.className = 'cost-row';
   row.setAttribute('data-ecid', id);
   var nv = (name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  var eprevId = 'ecost_prev_' + id;
   row.innerHTML =
     '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRevEdit()">' +
-    '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="fmtRevEditInput(this)">' +
+    '<div style="display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;width:90px;-webkit-flex-shrink:0;flex-shrink:0">'+
+      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="fmtRevEditInput(this);updateCostPreview(this,\'' + eprevId + '\')">'+
+      '<div id="'+eprevId+'" style="font-size:10px;color:var(--muted);text-align:right;min-height:13px;margin-top:2px"></div>'+
+    '</div>'+
     '<div class="cost-rm" onclick="rmRevEditCostRow('+id+')">&#215;</div>';
   container.appendChild(row);
   calcRevEdit();
@@ -1911,6 +1953,14 @@ function fmtRevEditInput(input) {
   if (!raw) { input.value = ''; calcRevEdit(); return; }
   input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw,10));
   calcRevEdit();
+}
+
+function updateCostPreview(input, previewId) {
+  var prev = document.getElementById(previewId);
+  if (!prev) return;
+  var raw = input.value.replace(/[^0-9]/g, '');
+  if (!raw) { prev.textContent = ''; return; }
+  prev.textContent = '= ' + new Intl.NumberFormat('vi-VN').format(parseInt(raw,10) * 1000) + 'đ';
 }
 function calcRevEdit() {
   var tm  = parseRevNum(document.getElementById('revEditTienMat').value);
@@ -1939,15 +1989,20 @@ function doUpdateRevenue() {
   for (var i = 0; i < rows.length; i++) {
     var n = rows[i].querySelector('.cost-name').value.trim();
     var a = parseRevNum(rows[i].querySelector('.cost-amt').value);
+    if (n && !a) { showToast('Chi phi "' + n + '": Chua nhap so tien!', 'error'); return; }
+    if (!n && a) { showToast('Chi phi so tien ' + a + 'K: Chua nhap ten!', 'error'); return; }
     if (n || a) { costs.push({name:n,amount:a}); totalCost += a; }
   }
   // Công thức cộng dồn
   var giuTM = revPrevGiuTM + tienMat - tipCK - totalCost;
   var giuCK = revPrevGiuCK + chuyenKH + tipCK;
   showLoading(true,'Dang cap nhat...');
+  var noteTM = document.getElementById('revEditNoteTM') ? document.getElementById('revEditNoteTM').value.trim() : '';
+  var noteCK = document.getElementById('revEditNoteCK') ? document.getElementById('revEditNoteCK').value.trim() : '';
   api({
     action:'updateRevenue', staff:currentUser, date:date,
     tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
+    noteTM:noteTM, noteCK:noteCK,
     tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs)
   }, function(err, result) {
     showLoading(false);
@@ -1962,14 +2017,13 @@ function doUpdateRevenue() {
       tipCK:     tipCK,
       costs:     costs,
       tongGiuTM: giuTM,
-      tongGiuCK: giuCK
+      tongGiuCK: giuCK,
+      noteTM:    noteTM,
+      noteCK:    noteCK
     };
     fillRevForm(d);
     setRevFormLocked(true);
-    // Cập nhật banner
-    document.getElementById('revTotal').textContent       = fmtRevNum(tongDT);
-    document.getElementById('revGiuTMBanner').textContent = fmtRevNum(giuTM);
-    document.getElementById('revGiuCKBanner').textContent = fmtRevNum(giuCK);
+    document.getElementById('revTotal').textContent = fmtRevNum(tongDT);
     // Nếu đang ở revView thì reload list
     if (document.getElementById('revViewScreen') &&
         document.getElementById('revViewScreen').classList.contains('active')) {
@@ -2040,14 +2094,16 @@ function openRevEditFromView(dateStr) {
     if(err||!result||!result.success||!result.data) return showToast('Khong tai duoc du lieu','error');
     var d = result.data;
     document.getElementById('revEditDate').textContent = dateStr;
-    document.getElementById('revEditTienMat').value  = d.tienMat  ? fmtRevNum(d.tienMat)  : '';
-    document.getElementById('revEditChuyenKH').value = d.chuyenKH ? fmtRevNum(d.chuyenKH) : '';
-    document.getElementById('revEditTipCK').value    = d.tipCK    ? fmtRevNum(d.tipCK)    : '';
+    document.getElementById('revEditTienMat').value  = d.tienMat  ? fmtInputK(d.tienMat)  : '';
+    document.getElementById('revEditChuyenKH').value = d.chuyenKH ? fmtInputK(d.chuyenKH) : '';
+    document.getElementById('revEditTipCK').value    = d.tipCK    ? fmtInputK(d.tipCK)    : '';
+    if (document.getElementById('revEditNoteTM')) document.getElementById('revEditNoteTM').value = d.noteTM || '';
+    if (document.getElementById('revEditNoteCK')) document.getElementById('revEditNoteCK').value = d.noteCK || '';
     var editCostRows = document.getElementById('revEditCostRows');
     editCostRows.innerHTML = '';
     revEditCostId = 0;
     if(d.costs&&d.costs.length){
-      for(var i=0;i<d.costs.length;i++) addRevEditCostRow(d.costs[i].name, d.costs[i].amount?fmtRevNum(d.costs[i].amount):'');
+      for(var i=0;i<d.costs.length;i++) addRevEditCostRow(d.costs[i].name, d.costs[i].amount?fmtInputK(d.costs[i].amount):'');
     }
     calcRevEdit();
     document.getElementById('revEditModal').classList.add('show');
