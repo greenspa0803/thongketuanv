@@ -1783,8 +1783,7 @@ function loadRevenue(date) {
 }
 
 function fmtRevNum(n) {
-  // n là số dạng K (150 = 150.000đ) → nhân ×1000 để hiển thị đầy đủ
-  return new Intl.NumberFormat('vi-VN').format(Math.round((n || 0) * 1000));
+  return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
 }
 
 function fmtInputK(n) {
@@ -1793,21 +1792,13 @@ function fmtInputK(n) {
 }
 function parseRevNum(s) {
   if (!s) return 0;
-  return parseFloat(s.toString().replace(/[.]/g, '').replace(/,/g, '.')) || 0;
+  // Xóa dấu chấm phân cách ngàn, thay dấu phẩy thành dấu chấm thập phân
+  return parseFloat(s.toString().replace(/\./g, '').replace(/,/g, '.')) || 0;
 }
 function formatRevInput(input) {
   var raw = input.value.replace(/[^0-9]/g, '');
-  if (!raw) {
-    input.value = '';
-    var prev = document.getElementById(input.id + '_preview');
-    if (prev) prev.textContent = '';
-    calcRev(); return;
-  }
-  var num = parseInt(raw, 10);
-  input.value = new Intl.NumberFormat('vi-VN').format(num);
-  // Hiện preview ×1000
-  var prev = document.getElementById(input.id + '_preview');
-  if (prev) prev.textContent = '= ' + new Intl.NumberFormat('vi-VN').format(num * 1000) + 'đ';
+  if (!raw) { input.value = ''; calcRev(); return; }
+  input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10));
   calcRev();
 }
 
