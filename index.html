@@ -213,7 +213,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 /* Rev view record edit button */
 .rev-view-record .btn{width:auto;display:inline-block}
 /* Note input trong thẻ doanh thu */
-.rev-input-note{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);padding:8px 12px;color:var(--muted);font-family:inherit;font-size:13px;outline:none;-webkit-appearance:none;appearance:none;margin-top:2px}
+.rev-input-note{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 12px;color:var(--muted);font-family:inherit;font-size:13px;outline:none;-webkit-appearance:none;appearance:none;width:100%}
 .rev-input-note:focus{border-color:var(--accent);color:var(--text)}
 .rev-input-note[readonly]{opacity:0.7;cursor:default}
 </style>
@@ -418,18 +418,22 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       <div class="rev-card-hdr">
         <span class="rev-card-icon">💰</span>
         <span class="rev-card-title">Doanh thu</span>
-        <span id="revTotal" style="margin-left:auto;font-size:15px;font-weight:700;color:var(--accent)">0K</span>
+        <span id="revTotal" style="margin-left:auto;font-size:15px;font-weight:700;color:var(--accent)">0</span>
       </div>
       <div class="rev-card-body">
-        <div class="rev-field" style="-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:6px">
+        <div class="rev-field">
           <div class="rev-field-label">Tiền mặt</div>
-          <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)">
-          <input type="text" class="rev-input-note" id="revNoteTM" placeholder="Ghi chú TM..." oninput="if(this.getAttribute('readonly'))return">
+          <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
+            <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)" style="min-width:80px;-webkit-flex:1;flex:1">
+            <input type="text" class="rev-input-note" id="revNoteTM" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
+          </div>
         </div>
-        <div class="rev-field" style="-webkit-flex-wrap:wrap;flex-wrap:wrap;gap:6px">
+        <div class="rev-field">
           <div class="rev-field-label">Chuyển khoản</div>
-          <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)">
-          <input type="text" class="rev-input-note" id="revNoteCK" placeholder="Ghi chú CK..." oninput="if(this.getAttribute('readonly'))return">
+          <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
+            <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)" style="min-width:80px;-webkit-flex:1;flex:1">
+            <input type="text" class="rev-input-note" id="revNoteCK" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
+          </div>
         </div>
         <div class="rev-field">
           <div class="rev-field-label">Tiền tip CK<small>Trừ vào tiền mặt giữ</small></div>
@@ -438,25 +442,23 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       </div>
     </div>
 
-    <!-- Card: Chi phí -->
+    <!-- Card: Chi phí (không có header) -->
     <div class="rev-card">
-      <div class="rev-card-hdr"><span class="rev-card-icon">🧾</span><span class="rev-card-title">Chi phí</span></div>
       <div class="rev-card-body">
         <div class="cost-rows" id="costRows"></div>
         <button class="add-cost-btn" onclick="addCostRow()">＋ Thêm chi phí</button>
       </div>
     </div>
 
-    <!-- Card: Tổng giữ -->
+    <!-- Card: Tổng giữ (không có header, text in đậm) -->
     <div class="rev-card" style="border-color:var(--success)44">
-      <div class="rev-card-hdr"><span class="rev-card-icon">🏦</span><span class="rev-card-title">Tổng giữ lại</span></div>
       <div class="rev-card-body">
         <div class="rev-field">
-          <div class="rev-field-label">Tổng giữ TM<small>TM trước + TM − Tip − Chi phí</small></div>
+          <div class="rev-field-label" style="font-weight:700;color:var(--text)">Tổng giữ TM<small style="font-weight:400;color:var(--muted)">TM trước + TM − Tip − CP</small></div>
           <input type="text" class="rev-input readonly-ok" id="revGiuTM" readonly placeholder="0">
         </div>
         <div class="rev-field">
-          <div class="rev-field-label">Tổng giữ CK<small>CK trước + CK + Tip</small></div>
+          <div class="rev-field-label" style="font-weight:700;color:var(--text)">Tổng giữ CK<small style="font-weight:400;color:var(--muted)">CK trước + CK + Tip</small></div>
           <input type="text" class="rev-input readonly-ck" id="revGiuCK" readonly placeholder="0">
         </div>
       </div>
@@ -1798,7 +1800,7 @@ function calcRev() {
   // Tổng giữ CK = giữ CK hôm trước + CK hôm nay + tip CK
   var giuTM = revPrevGiuTM + tm - tip - totalCost;
   var giuCK = revPrevGiuCK + ck + tip;
-  document.getElementById('revTotal').textContent = fmtRevNum(tongDT) + 'K';
+  document.getElementById('revTotal').textContent = fmtRevNum(tongDT);
   document.getElementById('revGiuTM').value = fmtRevNum(giuTM);
   document.getElementById('revGiuCK').value = fmtRevNum(giuCK);
 }
@@ -1980,7 +1982,7 @@ function doUpdateRevenue() {
     };
     fillRevForm(d);
     setRevFormLocked(true);
-    document.getElementById('revTotal').textContent = fmtRevNum(tongDT)+'K';
+    document.getElementById('revTotal').textContent = fmtRevNum(tongDT);
     // Nếu đang ở revView thì reload list
     if (document.getElementById('revViewScreen') &&
         document.getElementById('revViewScreen').classList.contains('active')) {
