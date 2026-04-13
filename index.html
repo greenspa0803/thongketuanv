@@ -1421,11 +1421,11 @@ function renderAdminRevenue(staff, month, year, data) {
   document.getElementById('adminSummary').innerHTML =
     '<div class="month-summary">'+
       '<div style="font-size:12px;color:#8899cc;margin-bottom:4px">'+esc(staff)+' — Doanh thu Thang '+month+'/'+year+'</div>'+
-      '<div class="ms-amount">'+fmtK(totalDT)+'</div>'+
+      '<div class="ms-amount">'+fmtRevNum(totalDT)+'</div>'+
       '<div style="font-size:12px;color:var(--muted)">nghin dong tong doanh thu</div>'+
       '<div class="ms-breakdown">'+
-        '<span>Tong giu TM: <b style="color:var(--success)">'+fmtK(totalGiuTM)+'</b></span>'+
-        '<span>Tong giu CK: <b style="color:var(--accent2)">'+fmtK(totalGiuCK)+'</b></span>'+
+        '<span>Tong giu TM: <b style="color:var(--success)">'+fmtRevNum(totalGiuTM)+'</b></span>'+
+        '<span>Tong giu CK: <b style="color:var(--accent2)">'+fmtRevNum(totalGiuCK)+'</b></span>'+
       '</div>'+
     '</div>';
   var html='';
