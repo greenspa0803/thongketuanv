@@ -1842,7 +1842,7 @@ function addCostRow(name, amount) {
   row.innerHTML =
     '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRev()">' +
     '<div style="display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;width:90px;-webkit-flex-shrink:0;flex-shrink:0">'+
-      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="formatRevInput(this);updateCostPreview(this,''+previewId+'')">'+
+      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="formatRevInput(this);updateCostPreview(this,\'' + previewId + '\')">'+
       '<div id="'+previewId+'" style="font-size:10px;color:var(--muted);text-align:right;min-height:13px;margin-top:2px"></div>'+
     '</div>'+
     '<div class="cost-rm" onclick="removeCostRow('+id+')">&#215;</div>';
@@ -1937,7 +1937,7 @@ function addRevEditCostRow(name, amount) {
   row.innerHTML =
     '<input type="text" class="cost-name" placeholder="Ten chi phi..." value="'+nv+'" oninput="calcRevEdit()">' +
     '<div style="display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;width:90px;-webkit-flex-shrink:0;flex-shrink:0">'+
-      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="fmtRevEditInput(this);updateCostPreview(this,''+eprevId+'')">'+
+      '<input type="text" inputmode="numeric" class="cost-amt" placeholder="0" value="'+(amount||'')+'" oninput="fmtRevEditInput(this);updateCostPreview(this,\'' + eprevId + '\')">'+
       '<div id="'+eprevId+'" style="font-size:10px;color:var(--muted);text-align:right;min-height:13px;margin-top:2px"></div>'+
     '</div>'+
     '<div class="cost-rm" onclick="rmRevEditCostRow('+id+')">&#215;</div>';
