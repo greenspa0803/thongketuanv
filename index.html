@@ -1162,7 +1162,26 @@ function loadViewMonth() {
   api({ action: 'getRecordsByMonth', staff: staff, month: month, year: year }, function(err, result) {
     showLoading(false);
     if (err || !result || !result.success) return showToast('Loi tai du lieu', 'error');
-    renderMonthView(result);
+    // Group flat array into days structure for renderMonthView
+    var data = result.data || [];
+    var dayMap = {}, dayOrder = [];
+    data.forEach(function(r) {
+      if (!dayMap[r.date]) { dayMap[r.date] = { date:r.date, records:[], total:0, totalOt:0 }; dayOrder.push(r.date); }
+      dayMap[r.date].records.push(r);
+      dayMap[r.date].total   += r.amount   || 0;
+      dayMap[r.date].totalOt += r.overtime || 0;
+    });
+    dayOrder.sort(function(a,b){
+      var pa=a.split('/'),pb=b.split('/');
+      return new Date(pa[2],pa[1]-1,pa[0])-new Date(pb[2],pb[1]-1,pb[0]);
+    });
+    var days = dayOrder.map(function(d){ return dayMap[d]; });
+    renderMonthView({
+      days: days,
+      total: result.total || 0,
+      totalTua: result.totalTua || 0,
+      totalOvertime: result.totalOvertime || 0
+    });
   });
 }
 
@@ -1374,7 +1393,7 @@ function renderAdminTua(staff, month, year, data) {
       html+='<div class="day-record">'+
         '<div class="day-record-stt">'+esc(r.stt)+'</div>'+
         '<div class="day-record-body">'+
-          '<div class="day-record-name">'+esc(r.customer||'—')+'</div>'+
+          '<div class="day-record-name">'+esc(r.customerName||'—')+'</div>'+
           '<div class="day-record-svc">'+esc(r.service)+'</div>'+
           otStr+
         '</div>'+
