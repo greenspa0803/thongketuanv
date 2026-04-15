@@ -420,30 +420,21 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
         <span class="rev-card-title">Doanh thu</span>
         <span id="revTotal" style="margin-left:auto;font-size:15px;font-weight:700;color:var(--accent)">0</span>
       </div>
-      <div class="rev-card-body">
+      <div style="padding:0 16px 10px">
+        <input type="text" class="rev-input-note" id="revNote" placeholder="Ghi chú..." style="width:100%">
+      </div>
+      <div class="rev-card-body" style="padding-top:0">
         <div class="rev-field">
           <div class="rev-field-label">Tiền mặt</div>
-          <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
-            <div style="-webkit-flex:1;flex:1;min-width:80px">
-              <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
-            </div>
-            <input type="text" class="rev-input-note" id="revNoteTM" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
-          </div>
+          <input type="text" inputmode="numeric" class="rev-input" id="revTienMat" placeholder="0" oninput="formatRevInput(this)">
         </div>
         <div class="rev-field">
           <div class="rev-field-label">Chuyển khoản</div>
-          <div style="display:-webkit-flex;display:flex;gap:6px;-webkit-flex:1;flex:1">
-            <div style="-webkit-flex:1;flex:1;min-width:80px">
-              <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
-            </div>
-            <input type="text" class="rev-input-note" id="revNoteCK" placeholder="Ghi chú..." oninput="if(this.getAttribute('readonly'))return" style="-webkit-flex:1.5;flex:1.5;min-width:0">
-          </div>
+          <input type="text" inputmode="numeric" class="rev-input" id="revChuyenKH" placeholder="0" oninput="formatRevInput(this)">
         </div>
         <div class="rev-field">
           <div class="rev-field-label">Tiền tip CK<small>Trừ vào tiền mặt giữ</small></div>
-          <div style="-webkit-flex:1;flex:1">
-            <input type="text" inputmode="numeric" class="rev-input" id="revTipCK" placeholder="0" oninput="formatRevInput(this)" style="width:100%">
-          </div>
+          <input type="text" inputmode="numeric" class="rev-input" id="revTipCK" placeholder="0" oninput="formatRevInput(this)">
         </div>
       </div>
     </div>
@@ -588,12 +579,12 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <h3>Sua bao cao <span id="revEditDate" style="color:var(--accent);font-size:13px"></span></h3>
     <div class="edit-lbl">Tien mat</div>
     <input type="text" inputmode="numeric" class="form-control" id="revEditTienMat" placeholder="0" oninput="fmtRevEditInput(this)">
-    <input type="text" class="form-control" id="revEditNoteTM" placeholder="Ghi chu TM..." style="margin-top:6px;font-size:13px;padding:9px 12px">
     <div class="edit-lbl">Chuyen khoan</div>
     <input type="text" inputmode="numeric" class="form-control" id="revEditChuyenKH" placeholder="0" oninput="fmtRevEditInput(this)">
-    <input type="text" class="form-control" id="revEditNoteCK" placeholder="Ghi chu CK..." style="margin-top:6px;font-size:13px;padding:9px 12px">
     <div class="edit-lbl">Tien tip CK</div>
     <input type="text" inputmode="numeric" class="form-control" id="revEditTipCK" placeholder="0" oninput="fmtRevEditInput(this)">
+    <div class="edit-lbl">Ghi chu</div>
+    <input type="text" class="form-control" id="revEditNote" placeholder="Ghi chu...">
     <div class="edit-lbl">Chi phi</div>
     <div class="cost-rows" id="revEditCostRows"></div>
     <button class="add-cost-btn" onclick="addRevEditCostRow('','')">&#xFF0B; Them chi phi</button>
@@ -1170,8 +1161,8 @@ function loadViewMonth() {
     data.forEach(function(r) {
       if (!dayMap[r.date]) { dayMap[r.date] = { date:r.date, records:[], total:0, totalOt:0 }; dayOrder.push(r.date); }
       dayMap[r.date].records.push(r);
-      dayMap[r.date].total   += r.amount   || 0;
       dayMap[r.date].totalOt += r.overtime || 0;
+      dayMap[r.date].total   += (r.amount || 0) + (r.overtime || 0);
     });
     dayOrder.sort(function(a,b){
       var pa=a.split('/'),pb=b.split('/');
@@ -1351,8 +1342,8 @@ function renderAdminTua(staff, month, year, data) {
   data.forEach(function(r) {
     if (!dayMap[r.date]) { dayMap[r.date] = { date:r.date, records:[], total:0, totalOt:0 }; dayOrder.push(r.date); }
     dayMap[r.date].records.push(r);
-    dayMap[r.date].total   += r.amount   || 0;
     dayMap[r.date].totalOt += r.overtime || 0;
+    dayMap[r.date].total   += (r.amount || 0) + (r.overtime || 0);
   });
   dayOrder.sort(function(a,b){
     var pa=a.split('/'),pb=b.split('/');
@@ -1684,8 +1675,7 @@ function resetRevForm() {
   document.getElementById('revTienMat').value  = '';
   document.getElementById('revChuyenKH').value = '';
   document.getElementById('revTipCK').value    = '';
-  document.getElementById('revNoteTM').value   = '';
-  document.getElementById('revNoteCK').value   = '';
+  document.getElementById('revNote').value = '';
   document.getElementById('costRows').innerHTML = '';
   revCostId = 0;
   calcRev();
@@ -1693,7 +1683,7 @@ function resetRevForm() {
 
 function setRevFormLocked(locked) {
   // Lock/unlock tất cả input trong form doanh thu
-  var ids = ['revTienMat','revChuyenKH','revTipCK','revNoteTM','revNoteCK'];
+  var ids = ['revTienMat','revChuyenKH','revTipCK','revNote'];
   ids.forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -1752,8 +1742,7 @@ function fillRevForm(d) {
   document.getElementById('revTienMat').value  = d.tienMat  ? fmtInputK(d.tienMat)  : '';
   document.getElementById('revChuyenKH').value = d.chuyenKH ? fmtInputK(d.chuyenKH) : '';
   document.getElementById('revTipCK').value    = d.tipCK    ? fmtInputK(d.tipCK)    : '';
-  document.getElementById('revNoteTM').value   = d.noteTM   || '';
-  document.getElementById('revNoteCK').value   = d.noteCK   || '';
+  document.getElementById('revNote').value = d.note || d.noteTM || '';
   document.getElementById('costRows').innerHTML = '';
   revCostId = 0;
   if (d.costs && d.costs.length) {
@@ -1844,8 +1833,7 @@ function getRevPayload() {
   var tienMat  = parseRevNum(document.getElementById('revTienMat').value);
   var chuyenKH = parseRevNum(document.getElementById('revChuyenKH').value);
   var tipCK    = parseRevNum(document.getElementById('revTipCK').value);
-  var noteTM   = document.getElementById('revNoteTM').value.trim();
-  var noteCK   = document.getElementById('revNoteCK').value.trim();
+  var note = document.getElementById('revNote').value.trim();
   var tongDT   = tienMat + chuyenKH;
   var totalCost = 0;
   var costs = [];
@@ -1859,7 +1847,7 @@ function getRevPayload() {
   var giuTM = revPrevGiuTM + tienMat - tipCK - totalCost;
   var giuCK = revPrevGiuCK + chuyenKH + tipCK;
   return { date:date, tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
-           noteTM:noteTM, noteCK:noteCK,
+           note:note,
            tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs) };
 }
 
@@ -1971,12 +1959,11 @@ function doUpdateRevenue() {
   var giuTM = revPrevGiuTM + tienMat - tipCK - totalCost;
   var giuCK = revPrevGiuCK + chuyenKH + tipCK;
   showLoading(true,'Dang cap nhat...');
-  var noteTM = document.getElementById('revEditNoteTM') ? document.getElementById('revEditNoteTM').value.trim() : '';
-  var noteCK = document.getElementById('revEditNoteCK') ? document.getElementById('revEditNoteCK').value.trim() : '';
+  var note = document.getElementById('revEditNote') ? document.getElementById('revEditNote').value.trim() : '';
   api({
     action:'updateRevenue', staff:currentUser, date:date,
     tongDT:tongDT, tienMat:tienMat, chuyenKH:chuyenKH, tipCK:tipCK,
-    noteTM:noteTM, noteCK:noteCK,
+    note:note,
     tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs)
   }, function(err, result) {
     showLoading(false);
@@ -1992,8 +1979,7 @@ function doUpdateRevenue() {
       costs:     costs,
       tongGiuTM: giuTM,
       tongGiuCK: giuCK,
-      noteTM:    noteTM,
-      noteCK:    noteCK
+      note:    note
     };
     fillRevForm(d);
     setRevFormLocked(true);
@@ -2071,8 +2057,7 @@ function openRevEditFromView(dateStr) {
     document.getElementById('revEditTienMat').value  = d.tienMat  ? fmtInputK(d.tienMat)  : '';
     document.getElementById('revEditChuyenKH').value = d.chuyenKH ? fmtInputK(d.chuyenKH) : '';
     document.getElementById('revEditTipCK').value    = d.tipCK    ? fmtInputK(d.tipCK)    : '';
-    if (document.getElementById('revEditNoteTM')) document.getElementById('revEditNoteTM').value = d.noteTM || '';
-    if (document.getElementById('revEditNoteCK')) document.getElementById('revEditNoteCK').value = d.noteCK || '';
+    if (document.getElementById('revEditNote')) document.getElementById('revEditNote').value = d.note || d.noteTM || '';
     var editCostRows = document.getElementById('revEditCostRows');
     editCostRows.innerHTML = '';
     revEditCostId = 0;
