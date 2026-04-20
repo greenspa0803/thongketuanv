@@ -376,6 +376,12 @@ function api(params, cb) {
     cb(new Error('API_URL chua duoc dien. Mo app.html va thay YOUR_APPS_SCRIPT_URL_HERE bang URL that.'), null);
     return;
   }
+  // Các action có text tiếng Việt → dùng POST để tránh mất dữ liệu khi encode URL
+  var postActions = { submitRecord:1, updateRecord:1, saveRevenue:1 };
+  if (postActions[params.action]) {
+    apiPost(params, cb);
+    return;
+  }
   var url = API_URL + '?';
   var parts = [];
   var keys = Object.keys(params);
@@ -1233,6 +1239,32 @@ document.addEventListener('click', function(e) {
 });
 
 // ── LOADING / TOAST ─────────────────────────────────────────
+// POST với JSON body - dành cho submitRecord, updateRecord (text tiếng Việt)
+function apiPost(params, cb) {
+  if (!API_URL || API_URL.indexOf('YOUR_APPS_SCRIPT') !== -1) {
+    cb(new Error('API_URL chua duoc dien'), null); return;
+  }
+  // Apps Script doPost cần action trong query string, body là JSON
+  var url = API_URL + '?action=' + encodeURIComponent(params.action);
+  try {
+    fetch(url, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' }, // Apps Script yêu cầu text/plain
+      body: JSON.stringify(params)
+    })
+      .then(function(res) { return res.text(); })
+      .then(function(text) {
+        var data;
+        try { data = JSON.parse(text); } catch(e) {
+          cb(new Error('Phan hoi khong hop le: ' + text.slice(0,80)), null); return;
+        }
+        cb(null, data);
+      })
+      .catch(function(err) { cb(new Error('Loi mang: ' + err.message), null); });
+  } catch(e) { cb(new Error('Loi fetch: ' + e.message), null); }
+}
+
 function showLoading(v, msg) {
   document.getElementById('loading').classList[v ? 'add' : 'remove']('show');
   if (msg) document.getElementById('loadingText').textContent = msg;
