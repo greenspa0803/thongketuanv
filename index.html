@@ -371,17 +371,34 @@ var svcRowId    = 0;
 
 // ── API ─────────────────────────────────────────────────────
 function api(params, cb) {
-  // Kiem tra URL da duoc dien chua
   if (!API_URL || API_URL.indexOf('YOUR_APPS_SCRIPT') !== -1) {
     cb(new Error('API_URL chua duoc dien. Mo app.html va thay YOUR_APPS_SCRIPT_URL_HERE bang URL that.'), null);
     return;
   }
-  // Các action có text tiếng Việt → dùng POST để tránh mất dữ liệu khi encode URL
+  // Dùng POST cho các action ghi dữ liệu có text tiếng Việt
   var postActions = { submitRecord:1, updateRecord:1, saveRevenue:1 };
   if (postActions[params.action]) {
-    apiPost(params, cb);
+    var postUrl = API_URL + '?action=' + encodeURIComponent(params.action);
+    try {
+      fetch(postUrl, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(params)
+      })
+        .then(function(res) { return res.text(); })
+        .then(function(text) {
+          var data;
+          try { data = JSON.parse(text); } catch(e) {
+            cb(new Error('Phan hoi khong hop le: ' + text.slice(0,80)), null); return;
+          }
+          cb(null, data);
+        })
+        .catch(function(err) { cb(new Error('Loi mang: ' + err.message), null); });
+    } catch(e) { cb(new Error('Loi fetch: ' + e.message), null); }
     return;
   }
+  // GET cho các action đọc dữ liệu
   var url = API_URL + '?';
   var parts = [];
   var keys = Object.keys(params);
@@ -1091,7 +1108,6 @@ function selectEditPhone(i) {
   var drop = document.getElementById('editPhoneDrop');
   var c = drop._data[i];
   document.getElementById('editPhone').value = c.phone;
-  // Chỉ điền tên KH nếu ô đang trống - tránh ghi đè tên đã có khi mở modal
   var custEl = document.getElementById('editCustomer');
   if (!custEl.value.trim()) custEl.value = c.name || '';
   drop.classList.remove('open');
@@ -1167,10 +1183,11 @@ function doUpdate() {
 
   document.getElementById('editSaveBtn').disabled = true;
   showLoading(true, 'Đang cập nhật...');
+  var origDate = (r.date && r.date.indexOf('/') !== -1) ? r.date : currentViewDate;
   api({
     action: 'updateRecord',
     staff: currentUser,
-    date: currentViewDate,
+    date: origDate,
     stt: r.stt,
     customerName: customer,
     phone: phone,
@@ -1219,52 +1236,26 @@ function closeAllDropdowns() {
   var drops = document.querySelectorAll('.dropdown');
   for (var i = 0; i < drops.length; i++) drops[i].classList.remove('open');
 }
-// Polyfill .closest() cho iOS Safari cũ
 function elClosest(el, sel) {
-  if (!el) return null;
-  if (el.matches && el.matches(sel)) return el;
-  if (el.msMatchesSelector && el.msMatchesSelector(sel)) return el;
-  return el.parentElement ? elClosest(el.parentElement, sel) : null;
+  while (el) {
+    if (el.matches) { if (el.matches(sel)) return el; }
+    else if (el.msMatchesSelector) { if (el.msMatchesSelector(sel)) return el; }
+    el = el.parentElement;
+  }
+  return null;
 }
 
 document.addEventListener('click', function(e) {
-  var t = e.target;
-  if (!elClosest(t, '.autocomplete-wrap') && !elClosest(t, '.svc-ac'))
+  if (!elClosest(e.target, '.autocomplete-wrap') && !elClosest(e.target, '.svc-ac'))
     closeAllDropdowns();
-  if (t === document.getElementById('editModal')) closeEdit();
-  if (!elClosest(t, '.edit-ac')) {
+  if (e.target === document.getElementById('editModal')) closeEdit();
+  if (!elClosest(e.target, '.edit-ac')) {
     document.getElementById('editPhoneDrop').classList.remove('open');
     document.getElementById('editSvcDrop').classList.remove('open');
   }
 });
 
 // ── LOADING / TOAST ─────────────────────────────────────────
-// POST với JSON body - dành cho submitRecord, updateRecord (text tiếng Việt)
-function apiPost(params, cb) {
-  if (!API_URL || API_URL.indexOf('YOUR_APPS_SCRIPT') !== -1) {
-    cb(new Error('API_URL chua duoc dien'), null); return;
-  }
-  // Apps Script doPost cần action trong query string, body là JSON
-  var url = API_URL + '?action=' + encodeURIComponent(params.action);
-  try {
-    fetch(url, {
-      method: 'POST',
-      redirect: 'follow',
-      headers: { 'Content-Type': 'text/plain' }, // Apps Script yêu cầu text/plain
-      body: JSON.stringify(params)
-    })
-      .then(function(res) { return res.text(); })
-      .then(function(text) {
-        var data;
-        try { data = JSON.parse(text); } catch(e) {
-          cb(new Error('Phan hoi khong hop le: ' + text.slice(0,80)), null); return;
-        }
-        cb(null, data);
-      })
-      .catch(function(err) { cb(new Error('Loi mang: ' + err.message), null); });
-  } catch(e) { cb(new Error('Loi fetch: ' + e.message), null); }
-}
-
 function showLoading(v, msg) {
   document.getElementById('loading').classList[v ? 'add' : 'remove']('show');
   if (msg) document.getElementById('loadingText').textContent = msg;
