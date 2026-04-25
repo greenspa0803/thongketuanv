@@ -11,6 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <title>Quản lý dịch vụ</title>
 <!-- APP VERSION: 2.5 | BUILD: 20260402-0417 -->
+
 <style>
 :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;--accent:#6c8eff;--accent2:#a78bfa;--success:#34d399;--danger:#f87171;--warn:#fbbf24;--text:#e8eaf6;--muted:#7b82a8;--r:14px;--rs:8px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -218,11 +219,13 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 </style>
 </head>
 <body>
+
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">Đang tải...</div>
 </div>
 <div class="toast" id="toast"></div>
+
 <div class="modal-overlay" id="logoutModal">
   <div class="modal">
     <h3>Đăng xuất?</h3>
@@ -233,6 +236,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     </div>
   </div>
 </div>
+
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="editModal">
   <div class="edit-modal">
@@ -257,11 +261,9 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <div class="edit-lbl">Ten khach hang</div>
     <input type="text" class="form-control" id="editCustomer" placeholder="Ten khach hang" autocomplete="off">
     <div class="edit-lbl">Dich vu</div>
-    <div class="edit-ac">
-      <input type="text" class="form-control" id="editService" placeholder="Tim dich vu..."
-        autocomplete="off" oninput="onEditSvcInput(this.value)" onfocus="onEditSvcInput(this.value)">
-      <div class="dropdown" id="editSvcDrop"></div>
-    </div>
+    <select class="form-control" id="editServiceSelect" onchange="onEditSvcSelectChange(this.value)">
+      <option value="">-- Dang tai... --</option>
+    </select>
     <div class="edit-lbl">Tien tua (K)</div>
     <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control" id="editAmount" placeholder="0">
     <div class="edit-lbl">Tang ca (K)</div>
@@ -277,6 +279,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     </div>
   </div>
 </div>
+
 <!-- CONFIRM DELETE -->
 <div class="confirm-overlay" id="confirmDelete">
   <div class="confirm-box">
@@ -289,6 +292,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     </div>
   </div>
 </div>
+
 <!-- LOGIN -->
 <div class="screen" id="loginScreen">
   <div class="login-card">
@@ -311,6 +315,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
   </div>
 </div>
+
 <!-- MAIN -->
 <div class="screen" id="mainScreen">
   <div class="topbar">
@@ -374,6 +379,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <button class="btn btn-success" id="submitBtn" onclick="doSubmit()">&#10003; Gửi</button>
   </div>
 </div>
+
 <!-- REVENUE SCREEN -->
 <div class="screen" id="revenueScreen">
   <div class="topbar">
@@ -387,12 +393,14 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     </div>
   </div>
   <div class="rev-content">
+
     <!-- Thông báo đã nhập -->
     <div id="revExistsNotice" style="display:none;background:#1a3a1a;border:1px solid var(--success);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
       <div style="font-size:14px;font-weight:600;color:var(--success);margin-bottom:6px">&#10003; Da co bao cao ngay nay</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Xem lai bao cao ben duoi. Neu can chinh sua, bam nut Sua.</div>
       <button class="btn btn-secondary" style="padding:9px;font-size:13px;width:auto;margin-right:8px" onclick="openRevEdit(getRevDateStr())">&#9998; Sua bao cao</button>
     </div>
+
     <!-- Date bar -->
     <div class="rev-datebar">
       <div class="spin-btn" onclick="revChangeDate(-1)">&#8249;</div>
@@ -402,6 +410,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
       </div>
       <div class="spin-btn" onclick="revChangeDate(1)">&#8250;</div>
     </div>
+
     <!-- Card: Thu -->
     <div class="rev-card">
       <div class="rev-card-hdr">
@@ -427,6 +436,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
         </div>
       </div>
     </div>
+
     <!-- Card: Chi phí (không có header) -->
     <div class="rev-card">
       <div class="rev-card-body">
@@ -434,6 +444,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
         <button class="add-cost-btn" onclick="addCostRow()">＋ Thêm chi phí</button>
       </div>
     </div>
+
     <!-- Card: Tổng giữ (không có header, text in đậm) -->
     <div class="rev-card" style="border-color:var(--success)44">
       <div class="rev-card-body">
@@ -447,12 +458,14 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
         </div>
       </div>
     </div>
+
   </div>
   <div class="bottom-actions">
     <button class="btn btn-outline" onclick="openRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#128197; Xem tháng</button>
     <button class="btn btn-success" id="revSaveBtn" onclick="saveRevenue()" style="-webkit-flex:2;flex:2;padding:15px">&#128190; Lưu báo cáo</button>
   </div>
 </div>
+
 <!-- REV VIEW SCREEN -->
 <div class="screen" id="revViewScreen">
   <div class="view-header">
@@ -473,6 +486,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <button class="btn btn-secondary" onclick="closeRevView()" style="-webkit-flex:1;flex:1;padding:15px">&#8592; Quay về</button>
   </div>
 </div>
+
 <!-- VIEW -->
 <div class="screen" id="viewScreen">
   <div class="view-header">
@@ -519,6 +533,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <button class="btn btn-secondary" onclick="closeView()">&#8592; Quay ve nhap lieu</button>
   </div>
 </div>
+
 <!-- ADMIN SCREEN -->
 <div class="screen" id="adminScreen">
   <div class="topbar">
@@ -554,6 +569,8 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <button class="btn btn-secondary" onclick="doLogout()">Dang xuat</button>
   </div>
 </div>
+
+
 <!-- REV EDIT MODAL -->
 <div class="modal-overlay" id="revEditModal">
   <div class="edit-modal">
@@ -579,11 +596,13 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     </div>
   </div>
 </div>
+
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
 const API_URL  = 'https://script.google.com/macros/s/AKfycby0O7CA6TxMFqWe7LHGw6d78Y-spVkgGiI-oC28AcZqcHSSbNpvGrjvJ2kymdlWtgAh/exec';
 var ADMIN_PASSWORD = 'admin123'; // doi mat khau admin tai day
 // Mat khau nhan vien lay tu cot B Sheet1 - khong can khai bao o day
+
 // ── STATE ───────────────────────────────────────────────────
 var currentUser  = null;
 var canReport    = false; // cột G = TRUE thì hiện toggle doanh thu
@@ -592,6 +611,7 @@ var services     = [];
 var currentDate  = new Date();
 var svcRowId     = 0;
 var revCostId    = 0;
+
 // ── API ─────────────────────────────────────────────────────
 function api(params, cb) {
   // Kiem tra URL da duoc dien chua
@@ -627,6 +647,7 @@ function api(params, cb) {
     cb(new Error('Loi fetch: ' + e.message), null);
   }
 }
+
 // ── INIT ────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function() {
   var saved     = localStorage.getItem('loggedUser');
@@ -657,12 +678,14 @@ window.addEventListener('DOMContentLoaded', function() {
     loadStaffList(null);
   }
 });
+
 function showScreen(id) {
   var screens = document.querySelectorAll('.screen');
   for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
 }
+
 // ── LOADING & TOAST ─────────────────────────────────────────
 function showLoading(visible, text) {
   var el = document.getElementById('loading');
@@ -675,6 +698,7 @@ function showLoading(visible, text) {
     el.classList.remove('show');
   }
 }
+
 var _toastTimer = null;
 function showToast(msg, type) {
   var el = document.getElementById('toast');
@@ -686,6 +710,7 @@ function showToast(msg, type) {
   if (_toastTimer) clearTimeout(_toastTimer);
   _toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2800);
 }
+
 // ── LOGOUT ──────────────────────────────────────────────────
 function showLogout() {
   document.getElementById('logoutModal').classList.add('show');
@@ -703,6 +728,8 @@ function doLogout() {
   showScreen('loginScreen');
   loadStaffList(null);
 }
+
+
 // ── STAFF LIST ──────────────────────────────────────────────
 function loadStaffList(done) {
   // Luon show login truoc, roi moi load data
@@ -725,16 +752,19 @@ function loadStaffList(done) {
     }
   });
 }
+
 // ── LOGIN ───────────────────────────────────────────────────
 function debugHint() {
   return ' | URL: ' + (API_URL || 'TRONG').slice(0, 40);
 }
+
 function doLogin() {
   var staff = document.getElementById('staffSelect').value;
   var pass  = document.getElementById('passwordInput').value;
   hideLoginError();
   if (!staff) return showLoginError('Vui long chon nhan vien');
   if (!pass)  return showLoginError('Vui long nhap mat khau');
+
   // Admin: kiem tra truoc, khong can goi API
   if (pass === ADMIN_PASSWORD) {
     localStorage.setItem('loggedUser', '__admin__');
@@ -743,10 +773,12 @@ function doLogin() {
     initAdminScreen(null);
     return;
   }
+
   // Nhan vien: verify qua Sheet1 cot B
   var loginBtn = document.getElementById('loginBtn');
   if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Dang kiem tra...'; }
   showLoading(true, 'Dang xac thuc...');
+
   api({ action: 'verifyLogin', staff: staff, pass: pass }, function(err, result) {
     showLoading(false);
     if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Dang nhap'; }
@@ -776,6 +808,7 @@ function doLogin() {
     initMainScreen(null);
   });
 }
+
 function showLoginError(msg) {
   var el = document.getElementById('loginError');
   el.textContent = msg;
@@ -784,6 +817,7 @@ function showLoginError(msg) {
 function hideLoginError() {
   document.getElementById('loginError').classList.remove('show');
 }
+
 // ── MAIN INIT ───────────────────────────────────────────────
 function initMainScreen(done) {
   document.getElementById('topbarName').textContent = currentUser;
@@ -810,10 +844,56 @@ function initMainScreen(done) {
     checkDone();
   });
   api({ action: 'getServices' }, function(err, res) {
-    if (!err && res && res.success) services = res.data;
+    if (!err && res && res.success) {
+      services = res.data;
+      updateAllSvcSelects();
+    }
     checkDone();
   });
 }
+
+function renderServiceOptions() {
+  var html = '<option value="">-- Chọn dịch vụ --</option>';
+  for (var i = 0; i < services.length; i++) {
+    var s = services[i];
+    var priceInfo = s.price ? ' (' + fmtK(s.price) + ')' : '';
+    html += '<option value="' + esc(s.name) + '">' + esc(s.name) + priceInfo + '</option>';
+  }
+  return html;
+}
+
+function updateAllSvcSelects() {
+  var opts = renderServiceOptions();
+  var selects = document.querySelectorAll('.svc-select');
+  for (var i = 0; i < selects.length; i++) {
+    var s = selects[i];
+    var cur = s.value;
+    s.innerHTML = opts;
+    if (cur) s.value = cur;
+  }
+  var editSel = document.getElementById('editServiceSelect');
+  if (editSel) {
+    var curE = editSel.value;
+    editSel.innerHTML = opts;
+    if (curE) editSel.value = curE;
+  }
+}
+
+function onSvcSelectChange(sel, rowId) {
+  var name = sel.value;
+  var svc = services.find(function(s) { return s.name === name; });
+  if (svc && svc.price) {
+    document.getElementById('sa_' + rowId).value = svc.price;
+  }
+}
+
+function onEditSvcSelectChange(val) {
+  var svc = services.find(function(s) { return s.name === val; });
+  if (svc && svc.price) {
+    document.getElementById('editAmount').value = svc.price;
+  }
+}
+
 // ── DATE ────────────────────────────────────────────────────
 function setDateToday() { currentDate = new Date(); updateDateDisplay(); }
 function updateDateDisplay() {
@@ -824,6 +904,7 @@ function updateDateDisplay() {
 }
 function changeDate(delta) { currentDate.setDate(currentDate.getDate() + delta); updateDateDisplay(); }
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
 // ── PHONE AUTOCOMPLETE ──────────────────────────────────────
 function onPhoneInput(val) {
   var drop = document.getElementById('phoneDropdown');
@@ -854,6 +935,7 @@ function selectPhone(i) {
   document.getElementById('customerInput').value = c.name;
   drop.classList.remove('open');
 }
+
 // ── SERVICE ROWS ────────────────────────────────────────────
 function addSvcRow() {
   svcRowId++;
@@ -864,9 +946,9 @@ function addSvcRow() {
   row.setAttribute('data-id', id);
   row.innerHTML =
     '<div class="svc-ac">' +
-      '<input type="text" class="form-control" placeholder="Tìm dịch vụ..." autocomplete="off"' +
-        ' oninput="onSvcInput(this,' + id + ')" onfocus="onSvcInput(this,' + id + ')">' +
-      '<div class="dropdown" id="sd_' + id + '"></div>' +
+      '<select class="form-control svc-select" id="ss_' + id + '" onchange="onSvcSelectChange(this,' + id + ')">' +
+        renderServiceOptions() +
+      '</select>' +
     '</div>' +
     '<div class="amt-col">' +
       '<input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control" placeholder="0" id="sa_' + id + '">' +
@@ -874,8 +956,8 @@ function addSvcRow() {
     '</div>' +
     '<div class="rm-btn" onclick="rmSvcRow(' + id + ')">&#215;</div>';
   container.appendChild(row);
-  row.querySelector('input').focus();
 }
+
 function rmSvcRow(id) {
   var container = document.getElementById('svcRows');
   if (container.children.length <= 1) {
@@ -886,50 +968,22 @@ function rmSvcRow(id) {
   var row = container.querySelector('[data-id="' + id + '"]');
   if (row) row.parentNode.removeChild(row);
 }
-function onSvcInput(input, id) {
-  var val = input.value;
-  var drop = document.getElementById('sd_' + id);
-  var allDrops = document.querySelectorAll('.dropdown');
-  for (var i = 0; i < allDrops.length; i++) {
-    if (allDrops[i].id !== 'sd_' + id) allDrops[i].classList.remove('open');
-  }
-  var q = val ? val.toLowerCase() : '';
-  var matches = [];
-  for (var j = 0; j < services.length; j++) {
-    if (!q || services[j].name.toLowerCase().indexOf(q) !== -1) {
-      matches.push(services[j]);
-    }
-  }
-  if (!matches.length) { drop.classList.remove('open'); return; }
-  drop._data = matches;
-  var html = '';
-  for (var k = 0; k < matches.length; k++) {
-    var priceStr = matches[k].price ? '<small>&#128176; ' + fmtK(matches[k].price) + '</small>' : '';
-    html += '<div class="dropdown-item" onclick="selectSvc(' + id + ',' + k + ')">' + esc(matches[k].name) + priceStr + '</div>';
-  }
-  drop.innerHTML = html;
-  drop.classList.add('open');
-}
-function selectSvc(rowId, idx) {
-  var drop = document.getElementById('sd_' + rowId);
-  var s = drop._data[idx];
-  var row = document.querySelector('[data-id="' + rowId + '"]');
-  row.querySelector('input').value = s.name;
-  if (s.price) document.getElementById('sa_' + rowId).value = s.price;
-  drop.classList.remove('open');
-}
+
+
 // ── OVERTIME ────────────────────────────────────────────────
 function onOtInput(val) {
   var n = parseFloat(val);
   var p = document.getElementById('otPreview');
   p.textContent = (val && !isNaN(n) && n > 0) ? ('-> ' + fmtVND(n * 1000) + ' dong') : '';
 }
+
 // ── UTILS ───────────────────────────────────────────────────
 function fmtVND(n)  { return new Intl.NumberFormat('vi-VN').format(n); }
 function fmtK(n)    { return new Intl.NumberFormat('vi-VN').format((n||0) * 1000); }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
 // ── SUBMIT ──────────────────────────────────────────────────
 function doSubmit() {
   var date     = document.getElementById('dateInput').value;
@@ -937,20 +991,23 @@ function doSubmit() {
   var customer = document.getElementById('customerInput').value.trim();
   var note     = document.getElementById('noteInput').value.trim();
   var overtime = document.getElementById('overtimeInput').value.trim() || '0';
+
   var rowEls = document.querySelectorAll('.svc-row');
   var rows = [];
   for (var i = 0; i < rowEls.length; i++) {
     var rowEl = rowEls[i];
     var rid = rowEl.getAttribute('data-id');
-    var svc = rowEl.querySelector('input').value.trim();
+    var svc = document.getElementById('ss_' + rid).value.trim();
     var amt = document.getElementById('sa_' + rid).value.trim();
     if (svc || amt) rows.push({ service: svc, amount: amt });
   }
+
   if (!phone && !customer) return showToast('Nhập SĐT hoặc tên khách hàng', 'error');
   if (!rows.length)        return showToast('Vui lòng nhập ít nhất 1 dịch vụ', 'error');
   for (var j = 0; j < rows.length; j++) {
     if (!rows[j].service || !rows[j].amount) return showToast('Mỗi dịch vụ cần có tên và số tiền', 'error');
   }
+
   document.getElementById('submitBtn').disabled = true;
   showLoading(true, 'Đang gửi ' + rows.length + ' dịch vụ...');
   sendRows(rows, date, phone, customer, note, overtime, 0, function(err, lastStt) {
@@ -965,6 +1022,7 @@ function doSubmit() {
     showToast(msg, 'success');
   });
 }
+
 function sendRows(rows, date, phone, customer, note, overtime, idx, cb) {
   if (idx >= rows.length) return cb(null, 0);
   var isFirst = idx === 0;
@@ -988,6 +1046,7 @@ function sendRows(rows, date, phone, customer, note, overtime, idx, cb) {
     });
   });
 }
+
 function resetForm() {
   document.getElementById('phoneInput').value    = '';
   document.getElementById('customerInput').value = '';
@@ -999,10 +1058,12 @@ function resetForm() {
   addSvcRow();
   closeAllDropdowns();
 }
+
 function closeAllDropdowns() {
   var drops = document.querySelectorAll('.dropdown');
   for (var i = 0; i < drops.length; i++) drops[i].classList.remove('open');
 }
+
 // ── VIEW ────────────────────────────────────────────────────
 function openView() {
   showScreen('viewScreen');
@@ -1020,6 +1081,7 @@ function openView() {
   document.getElementById('monthPeriod').style.display = 'none';
   loadViewDay();
 }
+
 function renderRecords(data, total, totalTua, totalOvertime) {
   currentRecords = data || [];
   document.getElementById('totalAmount').textContent = fmtK(total || 0);
@@ -1057,9 +1119,11 @@ function renderRecords(data, total, totalTua, totalOvertime) {
   }
   list.innerHTML = html;
 }
+
 // ── VIEW MODE ──────────────────────────────────────────────
 var viewMode = 'day'; // 'day' | 'month'
 var viewDate = new Date();
+
 function setViewMode(mode) {
   viewMode = mode;
   document.getElementById('modeDayBtn').className   = 'mode-btn' + (mode === 'day'   ? ' active' : '');
@@ -1069,11 +1133,13 @@ function setViewMode(mode) {
   if (mode === 'day')   loadViewDay();
   if (mode === 'month') loadViewMonth();
 }
+
 function viewChangeDate(delta) {
   viewDate.setDate(viewDate.getDate() + delta);
   document.getElementById('viewDateInput').value = fmtDate(viewDate);
   loadViewDay();
 }
+
 function loadViewDay() {
   var date = document.getElementById('viewDateInput').value;
   currentViewDate = date;
@@ -1089,6 +1155,7 @@ function loadViewDay() {
     renderRecords(result.data, result.total, result.totalTua, result.totalOvertime);
   });
 }
+
 function loadViewMonth() {
   var month = document.getElementById('viewMonth').value;
   var year  = document.getElementById('viewYear').value;
@@ -1124,6 +1191,7 @@ function loadViewMonth() {
     });
   });
 }
+
 function renderMonthView(result) {
   var days = result.days || [];
   var total = result.total || 0;
@@ -1131,6 +1199,7 @@ function renderMonthView(result) {
   var totalOvertime = result.totalOvertime || 0;
   var totalRecords = 0;
   for (var i = 0; i < days.length; i++) totalRecords += days[i].records.length;
+
   document.getElementById('totalAmount').textContent = fmtK(total);
   document.getElementById('totalCount').textContent  = totalRecords + ' luot | ' + days.length + ' ngay';
   var bd = document.getElementById('totalBreakdown');
@@ -1138,6 +1207,7 @@ function renderMonthView(result) {
     bd.innerHTML = '<span>Tua: <b style="color:var(--success)">' + fmtK(totalTua) + '</b></span>' +
                    '<span>Tang ca: <b style="color:var(--warn)">' + fmtK(totalOvertime) + '</b></span>';
   } else { bd.innerHTML = ''; }
+
   var list = document.getElementById('recordsList');
   if (!days.length) {
     list.innerHTML = '<div class="empty-state"><div class="emoji">&#128219;</div><p>Chua co du lieu thang nay</p></div>';
@@ -1176,6 +1246,7 @@ function renderMonthView(result) {
   }
   list.innerHTML = html;
 }
+
 function toggleDayCard(id) {
   var body = document.getElementById(id);
   var chv  = document.getElementById('chv_' + id);
@@ -1188,6 +1259,7 @@ function handleDayCard(el) {
   var id = el.getAttribute('data-did');
   toggleDayCard(id);
 }
+
 function initMonthYearSelects(monthId, yearId) {
   var now = new Date();
   var ms = document.getElementById(monthId);
@@ -1209,11 +1281,14 @@ function initMonthYearSelects(monthId, yearId) {
     ys.appendChild(opt2);
   }
 }
+
 function fmtDate(d) {
   return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear();
 }
+
 // ── ADMIN SCREEN ────────────────────────────────────────────
 var adminTab = 'tua';
+
 function setAdminTab(tab) {
   adminTab = tab;
   document.getElementById('adminTabTua').className = 'mode-btn' + (tab==='tua' ? ' active' : '');
@@ -1224,6 +1299,7 @@ function setAdminTab(tab) {
   var staff = document.getElementById('adminStaffSelect').value;
   if (staff) loadAdminData();
 }
+
 function onAdminStaffChange() {
   document.getElementById('adminSummary').innerHTML = '';
   document.getElementById('adminDayList').innerHTML = '';
@@ -1232,6 +1308,7 @@ function onAdminStaffChange() {
   if (!staff) return;
   loadAdminData();
 }
+
 function initAdminScreen(done) {
   initMonthYearSelects('adminMonth', 'adminYear');
   if (done) done();
@@ -1248,6 +1325,7 @@ function initAdminScreen(done) {
     }
   });
 }
+
 function loadAdminData() {
   var staff = document.getElementById('adminStaffSelect').value;
   if (!staff) return;
@@ -1271,6 +1349,7 @@ function loadAdminData() {
     });
   }
 }
+
 function renderAdminTua(staff, month, year, data) {
   // data = flat array of records, group by date
   var dayMap = {}, dayOrder = [];
@@ -1332,6 +1411,7 @@ function renderAdminTua(staff, month, year, data) {
   });
   document.getElementById('adminDayList').innerHTML=html;
 }
+
 function renderAdminRevenue(staff, month, year, data) {
   // data = array of revenue records from getRevenueByMonth
   if (!data.length) {
@@ -1354,6 +1434,7 @@ function renderAdminRevenue(staff, month, year, data) {
   data.forEach(function(d){ html+=renderRevCard(d, false); });
   document.getElementById('adminRevList').innerHTML=html;
 }
+
 // ── EDIT AUTOCOMPLETE ──────────────────────────────────────
 function onEditPhoneInput(val) {
   var drop = document.getElementById('editPhoneDrop');
@@ -1378,6 +1459,7 @@ function onEditPhoneInput(val) {
   drop.innerHTML = html;
   drop.classList.add('open');
 }
+
 function selectEditPhone(i) {
   var drop = document.getElementById('editPhoneDrop');
   var c = drop._data[i];
@@ -1385,36 +1467,12 @@ function selectEditPhone(i) {
   document.getElementById('editCustomer').value = c.name;
   drop.classList.remove('open');
 }
-function onEditSvcInput(val) {
-  var drop = document.getElementById('editSvcDrop');
-  document.getElementById('editPhoneDrop').classList.remove('open');
-  var q = val ? val.toLowerCase() : '';
-  var matches = [];
-  for (var i = 0; i < services.length; i++) {
-    if (!q || services[i].name.toLowerCase().indexOf(q) !== -1) {
-      matches.push(services[i]);
-    }
-  }
-  if (!matches.length) { drop.classList.remove('open'); return; }
-  drop._data = matches;
-  var html = '';
-  for (var j = 0; j < matches.length; j++) {
-    var priceStr = matches[j].price ? '<small>&#128176; ' + fmtK(matches[j].price) + '</small>' : '';
-    html += '<div class="dropdown-item" onclick="selectEditSvc(' + j + ')">' + esc(matches[j].name) + priceStr + '</div>';
-  }
-  drop.innerHTML = html;
-  drop.classList.add('open');
-}
-function selectEditSvc(i) {
-  var drop = document.getElementById('editSvcDrop');
-  var s = drop._data[i];
-  document.getElementById('editService').value = s.name;
-  if (s.price) document.getElementById('editAmount').value = s.price;
-  drop.classList.remove('open');
-}
+
+
 // ── EDIT RECORD ────────────────────────────────────────────
 var currentRecords = [];
 var currentViewDate = '';
+
 function openEdit(idx) {
   var r = currentRecords[idx];
   if (!r) return;
@@ -1426,29 +1484,33 @@ function openEdit(idx) {
   if (dp.length === 3) document.getElementById('editDatePicker').value = dp[2] + '-' + dp[1] + '-' + dp[0];
   document.getElementById('editCustomer').value  = r.customerName || '';
   document.getElementById('editPhone').value     = r.phone || '';
-  document.getElementById('editService').value   = r.service || '';
+  document.getElementById('editServiceSelect').value = r.service || '';
   document.getElementById('editAmount').value    = r.amount || '';
   document.getElementById('editOvertime').value  = r.overtime || '';
   document.getElementById('editNote').value      = r.note || '';
   document.getElementById('editModal').classList.add('show');
 }
+
 function closeEdit() {
   document.getElementById('editModal').classList.remove('show');
 }
+
 function doUpdate() {
   var idx      = parseInt(document.getElementById('editRowIndex').value);
   var r        = currentRecords[idx];
   if (!r) return;
   var customer = document.getElementById('editCustomer').value.trim();
   var phone    = document.getElementById('editPhone').value.trim();
-  var service  = document.getElementById('editService').value.trim();
+  var service  = document.getElementById('editServiceSelect').value.trim();
   var amount   = document.getElementById('editAmount').value.trim();
   var overtime = document.getElementById('editOvertime').value.trim() || '0';
   var note     = document.getElementById('editNote').value.trim();
   var newDate  = document.getElementById('editDateDisplay').value.trim();
+
   if (!newDate)  return showToast('Vui long nhap ngay', 'error');
   if (!service)  return showToast('Vui lòng nhập dịch vụ', 'error');
   if (!amount)   return showToast('Vui lòng nhập số tiền', 'error');
+
   document.getElementById('editSaveBtn').disabled = true;
   showLoading(true, 'Đang cập nhật...');
   api({
@@ -1475,6 +1537,7 @@ function doUpdate() {
     reloadView();
   });
 }
+
 // ── DELETE RECORD ──────────────────────────────────────────
 function confirmDeleteRecord() {
   var idx = parseInt(document.getElementById('editRowIndex').value);
@@ -1484,9 +1547,11 @@ function confirmDeleteRecord() {
   document.getElementById('confirmDeleteMsg').textContent = msg;
   document.getElementById('confirmDelete').classList.add('show');
 }
+
 function closeConfirmDelete() {
   document.getElementById('confirmDelete').classList.remove('show');
 }
+
 function doDelete() {
   var idx = parseInt(document.getElementById('editRowIndex').value);
   var r = currentRecords[idx];
@@ -1510,6 +1575,7 @@ function doDelete() {
     reloadView();
   });
 }
+
 // ── DATE PICKER ────────────────────────────────────────────
 function onEditDatePick(val) {
   // val = YYYY-MM-DD -> chuyen sang DD/MM/YYYY
@@ -1518,6 +1584,7 @@ function onEditDatePick(val) {
   if (parts.length !== 3) return;
   document.getElementById('editDateDisplay').value = parts[2] + '/' + parts[1] + '/' + parts[0];
 }
+
 function reloadView() {
   showLoading(true, 'Đang tải...');
   api({ action: 'getRecords', staff: currentUser, date: currentViewDate }, function(err, result) {
@@ -1526,7 +1593,10 @@ function reloadView() {
     renderRecords(result.data, result.total, result.totalTua, result.totalOvertime);
   });
 }
+
 function closeView() { showScreen('mainScreen'); }
+
+
 // ─── TAB SWITCH ─────────────────────────────────────────────
 function switchTab(tab) {
   if (tab === 'revenue') {
@@ -1548,28 +1618,33 @@ function switchTab(tab) {
     showScreen('mainScreen');
   }
 }
+
 // ─── REVENUE SCREEN ───────────────────────────────────────────
 var revCostId   = 0;
 var revCurDate  = new Date();
 var revExistsMode = false; // true = ngày đã có báo cáo
 var revPrevGiuTM  = 0;    // Tổng giữ TM ngày hôm trước
 var revPrevGiuCK  = 0;    // Tổng giữ CK ngày hôm trước
+
 function initRevenueScreen() {
   revCurDate = new Date();
   setRevDate(revCurDate);
   loadRevenue(fmtDate(revCurDate));
 }
+
 function setRevDate(d) {
   revCurDate = d;
   var dd = pad(d.getDate()), mm = pad(d.getMonth()+1), yyyy = d.getFullYear();
   document.getElementById('revDateDisplay').textContent = dd+'/'+mm+'/'+yyyy;
   document.getElementById('revDatePicker').value = yyyy+'-'+mm+'-'+dd;
 }
+
 function revChangeDate(delta) {
   revCurDate.setDate(revCurDate.getDate() + delta);
   setRevDate(revCurDate);
   loadRevenue(fmtDate(revCurDate));
 }
+
 function onRevDatePick(val) {
   if (!val) return;
   var p = val.split('-');
@@ -1577,9 +1652,11 @@ function onRevDatePick(val) {
   setRevDate(revCurDate);
   loadRevenue(fmtDate(revCurDate));
 }
+
 function getRevDateStr() {
   return document.getElementById('revDateDisplay').textContent;
 }
+
 function resetRevForm() {
   document.getElementById('revTienMat').value  = '';
   document.getElementById('revChuyenKH').value = '';
@@ -1589,6 +1666,7 @@ function resetRevForm() {
   revCostId = 0;
   calcRev();
 }
+
 function setRevFormLocked(locked) {
   // Lock/unlock tất cả input trong form doanh thu
   var ids = ['revTienMat','revChuyenKH','revTipCK','revNote'];
@@ -1626,6 +1704,7 @@ function setRevFormLocked(locked) {
     el.style.display = locked ? 'none' : '';
   });
 }
+
 function setRevExistsMode(exists, data) {
   revExistsMode = exists;
   var notice = document.getElementById('revExistsNotice');
@@ -1643,6 +1722,7 @@ function setRevExistsMode(exists, data) {
     resetRevForm();
   }
 }
+
 function fillRevForm(d) {
   // Ô nhập hiển thị số K gốc (vd: 150, không phải 150.000)
   document.getElementById('revTienMat').value  = d.tienMat  ? fmtInputK(d.tienMat)  : '';
@@ -1657,6 +1737,7 @@ function fillRevForm(d) {
   }
   calcRev();
 }
+
 function loadRevenue(date) {
   showLoading(true, 'Dang tai...');
   api({ action: 'getRevenue', staff: currentUser, date: date }, function(err, result) {
@@ -1672,9 +1753,11 @@ function loadRevenue(date) {
     }
   });
 }
+
 function fmtRevNum(n) {
   return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
 }
+
 function fmtInputK(n) {
   // Format số K cho ô nhập: 150 → "150", 1500 → "1.500" (không nhân ×1000)
   return new Intl.NumberFormat('vi-VN').format(Math.round(n || 0));
@@ -1690,6 +1773,7 @@ function formatRevInput(input) {
   input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw, 10));
   calcRev();
 }
+
 function calcRev() {
   var tm  = parseRevNum(document.getElementById('revTienMat').value);
   var ck  = parseRevNum(document.getElementById('revChuyenKH').value);
@@ -1708,6 +1792,7 @@ function calcRev() {
   document.getElementById('revGiuTM').value = fmtRevNum(giuTM);
   document.getElementById('revGiuCK').value = fmtRevNum(giuCK);
 }
+
 function addCostRow(name, amount) {
   revCostId++;
   var id = revCostId;
@@ -1723,10 +1808,12 @@ function addCostRow(name, amount) {
   container.appendChild(row);
   calcRev();
 }
+
 function removeCostRow(id) {
   var row = document.querySelector('[data-cid="'+id+'"]');
   if (row) { row.parentNode.removeChild(row); calcRev(); }
 }
+
 function getRevPayload() {
   var date     = getRevDateStr();
   var tienMat  = parseRevNum(document.getElementById('revTienMat').value);
@@ -1749,6 +1836,7 @@ function getRevPayload() {
            note:note,
            tongGiuTM:giuTM, tongGiuCK:giuCK, costs:JSON.stringify(costs) };
 }
+
 function saveRevenue() {
   // Validate bắt buộc
   var tm  = parseRevNum(document.getElementById('revTienMat').value);
@@ -1782,15 +1870,18 @@ function saveRevenue() {
     loadRevenue(payload.date);
   });
 }
+
 // ─── REV EDIT (sửa báo cáo đã lưu) ──────────────────────────
 function openRevEdit(dateStr) {
   var d = dateStr || getRevDateStr();
   // Luôn load fresh từ API để đảm bảo đúng data
   openRevEditFromView(d);
 }
+
 function closeRevEdit() {
   document.getElementById('revEditModal').classList.remove('show');
 }
+
 var revEditCostId = 0;
 function addRevEditCostRow(name, amount) {
   revEditCostId++;
@@ -1817,6 +1908,8 @@ function fmtRevEditInput(input) {
   input.value = new Intl.NumberFormat('vi-VN').format(parseInt(raw,10));
   calcRevEdit();
 }
+
+
 function calcRevEdit() {
   var tm  = parseRevNum(document.getElementById('revEditTienMat').value);
   var ck  = parseRevNum(document.getElementById('revEditChuyenKH').value);
@@ -1831,6 +1924,7 @@ function calcRevEdit() {
   document.getElementById('revEditGiuTM').value = fmtRevNum(giuTM);
   document.getElementById('revEditGiuCK').value = fmtRevNum(giuCK);
 }
+
 function doUpdateRevenue() {
   var date     = document.getElementById('revEditDate').textContent;
   var tienMat  = parseRevNum(document.getElementById('revEditTienMat').value);
@@ -1883,15 +1977,18 @@ function doUpdateRevenue() {
     }
   });
 }
+
 // ─── REV VIEW ────────────────────────────────────────────────
 var revViewDate = new Date();
 var revViewMode = 'day';
+
 function openRevView() {
   showScreen('revViewScreen');
   initMonthYearSelects('revViewMonth','revViewYear');
   loadRevMonth();
 }
 function closeRevView() { showScreen('revenueScreen'); }
+
 function loadRevMonth() {
   var month=document.getElementById('revViewMonth').value;
   var year =document.getElementById('revViewYear').value;
@@ -1910,6 +2007,7 @@ function loadRevMonth() {
     list.innerHTML=html;
   });
 }
+
 function renderRevCard(d, showEdit) {
   var costsHtml='';
   if(d.costs&&d.costs.length){
@@ -1933,6 +2031,7 @@ function renderRevCard(d, showEdit) {
       '<div class="rv-item"><div class="rv-item-lbl">Giu CK</div><div class="rv-item-val" style="color:var(--accent2)">'+fmtRevNum(d.tongGiuCK)+'</div></div>'+
     '</div>'+costsHtml+editBtn+'</div>';
 }
+
 function openRevEditFromView(dateStr) {
   // Load data từ API rồi mở edit modal
   showLoading(true,'Dang tai...');
@@ -1955,7 +2054,10 @@ function openRevEditFromView(dateStr) {
     document.getElementById('revEditModal').classList.add('show');
   });
 }
+
+
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 </script>
 </body>
 </html>
