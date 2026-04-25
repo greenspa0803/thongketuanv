@@ -851,69 +851,6 @@ function initMainScreen(done) {
   });
 }
 
-function onSvcInput(input, id) {
-  var val = input.value;
-  var drop = document.getElementById('sd_' + id);
-  var allDrops = document.querySelectorAll('.dropdown');
-  for (var i = 0; i < allDrops.length; i++) {
-    if (allDrops[i].id !== 'sd_' + id) allDrops[i].classList.remove('open');
-  }
-  var q = val ? val.toLowerCase() : '';
-  var matches = [];
-  for (var j = 0; j < services.length; j++) {
-    if (!q || services[j].name.toLowerCase().indexOf(q) !== -1) {
-      matches.push(services[j]);
-    }
-  }
-  if (!matches.length) { drop.classList.remove('open'); return; }
-  drop._data = matches;
-  var html = '';
-  for (var k = 0; k < matches.length; k++) {
-    var priceStr = matches[k].price ? '<small>&#128176; ' + fmtK(matches[k].price) + '</small>' : '';
-    html += '<div class="dropdown-item" onclick="selectSvc(' + id + ',' + k + ')">' + esc(matches[k].name) + priceStr + '</div>';
-  }
-  drop.innerHTML = html;
-  drop.classList.add('open');
-}
-
-function selectSvc(rowId, idx) {
-  var drop = document.getElementById('sd_' + rowId);
-  var s = drop._data[idx];
-  var row = document.querySelector('[data-id="' + rowId + '"]');
-  row.querySelector('.svc-input').value = s.name;
-  if (s.price) document.getElementById('sa_' + rowId).value = s.price;
-  drop.classList.remove('open');
-}
-
-function onEditSvcInput(val) {
-  var drop = document.getElementById('editSvcDrop');
-  document.getElementById('editPhoneDrop').classList.remove('open');
-  var q = val ? val.toLowerCase() : '';
-  var matches = [];
-  for (var i = 0; i < services.length; i++) {
-    if (!q || services[i].name.toLowerCase().indexOf(q) !== -1) {
-      matches.push(services[i]);
-    }
-  }
-  if (!matches.length) { drop.classList.remove('open'); return; }
-  drop._data = matches;
-  var html = '';
-  for (var j = 0; j < matches.length; j++) {
-    var priceStr = matches[j].price ? '<small>&#128176; ' + fmtK(matches[j].price) + '</small>' : '';
-    html += '<div class="dropdown-item" onclick="selectEditSvc(' + j + ')">' + esc(matches[j].name) + priceStr + '</div>';
-  }
-  drop.innerHTML = html;
-  drop.classList.add('open');
-}
-
-function selectEditSvc(i) {
-  var drop = document.getElementById('editSvcDrop');
-  var s = drop._data[i];
-  document.getElementById('editService').value = s.name;
-  if (s.price) document.getElementById('editAmount').value = s.price;
-  drop.classList.remove('open');
-}
-
 // ── DATE ────────────────────────────────────────────────────
 function setDateToday() { currentDate = new Date(); updateDateDisplay(); }
 function updateDateDisplay() {
@@ -966,7 +903,7 @@ function addSvcRow() {
   row.setAttribute('data-id', id);
   row.innerHTML =
     '<div class="svc-ac">' +
-      '<input type="text" class="form-control svc-input" placeholder="Tìm dịch vụ..." autocomplete="off"' +
+      '<input type="text" class="form-control" placeholder="Tìm dịch vụ..." autocomplete="off"' +
         ' oninput="onSvcInput(this,' + id + ')" onfocus="onSvcInput(this,' + id + ')">' +
       '<div class="dropdown" id="sd_' + id + '"></div>' +
     '</div>' +
@@ -976,6 +913,7 @@ function addSvcRow() {
     '</div>' +
     '<div class="rm-btn" onclick="rmSvcRow(' + id + ')">&#215;</div>';
   container.appendChild(row);
+  row.querySelector('input').focus();
 }
 
 function rmSvcRow(id) {
@@ -989,6 +927,39 @@ function rmSvcRow(id) {
   if (row) row.parentNode.removeChild(row);
 }
 
+function onSvcInput(input, id) {
+  var val = input.value;
+  var drop = document.getElementById('sd_' + id);
+  var allDrops = document.querySelectorAll('.dropdown');
+  for (var i = 0; i < allDrops.length; i++) {
+    if (allDrops[i].id !== 'sd_' + id) allDrops[i].classList.remove('open');
+  }
+  var q = val ? val.toLowerCase() : '';
+  var matches = [];
+  for (var j = 0; j < services.length; j++) {
+    if (!q || services[j].name.toLowerCase().indexOf(q) !== -1) {
+      matches.push(services[j]);
+    }
+  }
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop._data = matches;
+  var html = '';
+  for (var k = 0; k < matches.length; k++) {
+    var priceStr = matches[k].price ? '<small>&#128176; ' + fmtK(matches[k].price) + '</small>' : '';
+    html += '<div class="dropdown-item" onclick="selectSvc(' + id + ',' + k + ')">' + esc(matches[k].name) + priceStr + '</div>';
+  }
+  drop.innerHTML = html;
+  drop.classList.add('open');
+}
+
+function selectSvc(rowId, idx) {
+  var drop = document.getElementById('sd_' + rowId);
+  var s = drop._data[idx];
+  var row = document.querySelector('[data-id="' + rowId + '"]');
+  row.querySelector('input').value = s.name;
+  if (s.price) document.getElementById('sa_' + rowId).value = s.price;
+  drop.classList.remove('open');
+}
 
 // ── OVERTIME ────────────────────────────────────────────────
 function onOtInput(val) {
@@ -1002,6 +973,14 @@ function fmtVND(n)  { return new Intl.NumberFormat('vi-VN').format(n); }
 function fmtK(n)    { return new Intl.NumberFormat('vi-VN').format((n||0) * 1000); }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function isValidService(name) {
+  if (!name) return false;
+  var n = name.toLowerCase().trim();
+  for (var i = 0; i < services.length; i++) {
+    if (services[i].name.toLowerCase().trim() === n) return true;
+  }
+  return false;
 }
 
 // ── SUBMIT ──────────────────────────────────────────────────
@@ -1017,20 +996,16 @@ function doSubmit() {
   for (var i = 0; i < rowEls.length; i++) {
     var rowEl = rowEls[i];
     var rid = rowEl.getAttribute('data-id');
-    var svc = rowEl.querySelector('.svc-input').value.trim();
+    var svc = rowEl.querySelector('input').value.trim();
     var amt = document.getElementById('sa_' + rid).value.trim();
-    if (svc || amt) {
-      // Validate service exists in list
-      var svcObj = services.find(function(s) { return s.name === svc; });
-      if (!svcObj) return showToast('Dich vu "' + svc + '" khong hop le', 'error');
-      rows.push({ service: svc, amount: amt });
-    }
+    if (svc || amt) rows.push({ service: svc, amount: amt });
   }
 
   if (!phone && !customer) return showToast('Nhập SĐT hoặc tên khách hàng', 'error');
   if (!rows.length)        return showToast('Vui lòng nhập ít nhất 1 dịch vụ', 'error');
   for (var j = 0; j < rows.length; j++) {
     if (!rows[j].service || !rows[j].amount) return showToast('Mỗi dịch vụ cần có tên và số tiền', 'error');
+    if (!isValidService(rows[j].service)) return showToast('Dịch vụ "' + rows[j].service + '" không hợp lệ. Vui lòng chọn từ danh sách gợi ý.', 'error');
   }
 
   document.getElementById('submitBtn').disabled = true;
@@ -1493,6 +1468,34 @@ function selectEditPhone(i) {
   drop.classList.remove('open');
 }
 
+function onEditSvcInput(val) {
+  var drop = document.getElementById('editSvcDrop');
+  document.getElementById('editPhoneDrop').classList.remove('open');
+  var q = val ? val.toLowerCase() : '';
+  var matches = [];
+  for (var i = 0; i < services.length; i++) {
+    if (!q || services[i].name.toLowerCase().indexOf(q) !== -1) {
+      matches.push(services[i]);
+    }
+  }
+  if (!matches.length) { drop.classList.remove('open'); return; }
+  drop._data = matches;
+  var html = '';
+  for (var j = 0; j < matches.length; j++) {
+    var priceStr = matches[j].price ? '<small>&#128176; ' + fmtK(matches[j].price) + '</small>' : '';
+    html += '<div class="dropdown-item" onclick="selectEditSvc(' + j + ')">' + esc(matches[j].name) + priceStr + '</div>';
+  }
+  drop.innerHTML = html;
+  drop.classList.add('open');
+}
+
+function selectEditSvc(i) {
+  var drop = document.getElementById('editSvcDrop');
+  var s = drop._data[i];
+  document.getElementById('editService').value = s.name;
+  if (s.price) document.getElementById('editAmount').value = s.price;
+  drop.classList.remove('open');
+}
 
 // ── EDIT RECORD ────────────────────────────────────────────
 var currentRecords = [];
@@ -1528,17 +1531,13 @@ function doUpdate() {
   var phone    = document.getElementById('editPhone').value.trim();
   var service  = document.getElementById('editService').value.trim();
   var amount   = document.getElementById('editAmount').value.trim();
-  
-  // Validate service exists in list
-  var svcObj = services.find(function(s) { return s.name === service; });
-  if (!svcObj) return showToast('Dich vu "' + service + '" khong hop le', 'error');
-
   var overtime = document.getElementById('editOvertime').value.trim() || '0';
   var note     = document.getElementById('editNote').value.trim();
   var newDate  = document.getElementById('editDateDisplay').value.trim();
 
   if (!newDate)  return showToast('Vui long nhap ngay', 'error');
   if (!service)  return showToast('Vui lòng nhập dịch vụ', 'error');
+  if (!isValidService(service)) return showToast('Dịch vụ không hợp lệ. Vui lòng chọn từ danh sách gợi ý.', 'error');
   if (!amount)   return showToast('Vui lòng nhập số tiền', 'error');
 
   document.getElementById('editSaveBtn').disabled = true;
