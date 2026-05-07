@@ -956,8 +956,17 @@ function selectSvc(rowId, idx) {
   var drop = document.getElementById('sd_' + rowId);
   var s = drop._data[idx];
   var row = document.querySelector('[data-id="' + rowId + '"]');
+  var amtInput = document.getElementById('sa_' + rowId);
   row.querySelector('input').value = s.name;
-  if (s.price) document.getElementById('sa_' + rowId).value = s.price;
+  if (s.price) {
+    amtInput.value = s.price;
+    amtInput.readOnly = true;
+    amtInput.style.opacity = '0.7';
+  } else {
+    amtInput.value = '';
+    amtInput.readOnly = false;
+    amtInput.style.opacity = '1';
+  }
   drop.classList.remove('open');
 }
 
@@ -1492,8 +1501,16 @@ function onEditSvcInput(val) {
 function selectEditSvc(i) {
   var drop = document.getElementById('editSvcDrop');
   var s = drop._data[i];
+  var amtInput = document.getElementById('editAmount');
   document.getElementById('editService').value = s.name;
-  if (s.price) document.getElementById('editAmount').value = s.price;
+  if (s.price) {
+    amtInput.value = s.price;
+    amtInput.readOnly = true;
+    amtInput.style.opacity = '0.7';
+  } else {
+    amtInput.readOnly = false;
+    amtInput.style.opacity = '1';
+  }
   drop.classList.remove('open');
 }
 
@@ -1513,7 +1530,21 @@ function openEdit(idx) {
   document.getElementById('editCustomer').value  = r.customerName || '';
   document.getElementById('editPhone').value     = r.phone || '';
   document.getElementById('editService').value   = r.service || '';
-  document.getElementById('editAmount').value    = r.amount || '';
+  
+  var amtInput = document.getElementById('editAmount');
+  amtInput.value = r.amount || '';
+  
+  // Kiểm tra nếu dịch vụ này có giá cố định thì khóa
+  var isFixed = false;
+  var svcName = (r.service || '').toLowerCase().trim();
+  for (var i = 0; i < services.length; i++) {
+    if (services[i].name.toLowerCase().trim() === svcName && services[i].price) {
+      isFixed = true; break;
+    }
+  }
+  amtInput.readOnly = isFixed;
+  amtInput.style.opacity = isFixed ? '0.7' : '1';
+
   document.getElementById('editOvertime').value  = r.overtime || '';
   document.getElementById('editNote').value      = r.note || '';
   document.getElementById('editModal').classList.add('show');
